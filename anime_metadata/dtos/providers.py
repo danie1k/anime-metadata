@@ -18,7 +18,7 @@ class ProviderData:
     genres: Sequence[str] = attr.ib(converter=_utils.genres_converter)
     id: str
     images: show.ShowImage
-    mpaa: enums.MPAA
+    mpaa: Union[enums.MPAA, None]
     plot: str
     rating: Union[Decimal, None] = attr.ib(converter=_utils.rating_converter)
     source_material: Union[enums.SourceMaterial, None]

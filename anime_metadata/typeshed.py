@@ -6,6 +6,8 @@ AnimeId = Union[int, str]
 AnimeTitle = str
 CharacterId = Union[int, str]
 
+TvShowId = Union[int, str]
+
 CharacterName = str
 PersonName = str
 PositionName = str

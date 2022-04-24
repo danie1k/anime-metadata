@@ -217,9 +217,8 @@ def _raw_data_to_dto(
 
     return dtos.ProviderSeriesData(
         # ID
-        id=str(mal_api_data["id"]),
-        # TODO: ACTORS
-        # actors=[
+        id=mal_api_data["id"],
+        # TODO: actors=[
         #     anime_metadata.dtos.show.ShowActor(name=seiyuu, role=name)
         #     for name, seiyuu in list(_characters["main"].items()) + list(_characters["supporting"].items())
         # ],
