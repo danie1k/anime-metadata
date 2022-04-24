@@ -5,6 +5,7 @@ from typing import Union, List
 import attr
 
 from anime_metadata import enums
+from anime_metadata.typeshed import AnimeTitle
 from . import _utils
 
 __all__ = (
@@ -61,12 +62,12 @@ class ShowImage:
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ShowTitle:
-    en: str
-    jp_jp: Union[str, None] = None
-    jp_romanized: Union[str, None] = None
+    en: AnimeTitle
+    jp_jp: Union[AnimeTitle, None] = None
+    jp_romanized: Union[AnimeTitle, None] = None
 
     @property
-    def jp(self) -> Union[str, None]:
+    def jp(self) -> Union[AnimeTitle, None]:
         if self.jp_romanized:
             return self.jp_romanized
         return self.jp_jp
@@ -74,9 +75,8 @@ class ShowTitle:
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ShowEpisode:
-
     no: int
-    type: enums.ShowEpisodeType = enums.ShowEpisodeType.REGULAR
+    type: enums.EpisodeType = enums.EpisodeType.REGULAR
 
     id: str
     plot: str

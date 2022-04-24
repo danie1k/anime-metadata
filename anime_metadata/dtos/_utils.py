@@ -1,10 +1,18 @@
+from decimal import Decimal
+
+import attr
+from dateutil.parser import parse as dateutil_parse
 import datetime
-from typing import Any, Union, TYPE_CHECKING
+from typing import Any, Union, TYPE_CHECKING, Set, Sequence
 
 from furl import furl
 
+from anime_metadata import utils
+
 if TYPE_CHECKING:
     from anime_metadata.dtos.show import ShowDate
+
+# Converters
 
 
 def date_converter(value: Any) -> Union[datetime.date, None]:
@@ -20,7 +28,29 @@ def date_converter(value: Any) -> Union[datetime.date, None]:
     if not value:
         return None
 
-    return datetime.date.fromisoformat(value)
+    return dateutil_parse(value).date()
+
+
+def genres_converter(value: Any) -> Sequence[str]:
+    if not value:
+        return []
+    return sorted(map(
+        utils.capitalize,
+        ["Anime", *(item for item in set(value))],
+    ))
+
+
+def rating_converter(value: Any) -> Union[Decimal, None]:
+    return attr.converters.optional(lambda value: Decimal(str(value)))(value)
+
+
+def studios_converter(value: Any) -> Sequence[str]:
+    if not value:
+        return []
+    return sorted(set(value))
+
+
+# Factories
 
 
 def year_factory(self: "ShowDate") -> Union[int, None]:

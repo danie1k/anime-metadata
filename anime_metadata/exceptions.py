@@ -1,3 +1,5 @@
+from anime_metadata.typeshed import ApiResponseData
+
 
 class AnimeMetadataError(Exception):
     pass
@@ -5,6 +7,12 @@ class AnimeMetadataError(Exception):
 
 class AnimeMetadataProviderError(AnimeMetadataError):
     pass
+
+
+class ProviderResultFound(StopIteration):
+    def __init__(self, data_item: ApiResponseData, *args: object) -> None:
+        self.data_item = data_item
+        super().__init__(*args)
 
 
 class ProviderNoResultError(AnimeMetadataProviderError):
@@ -18,3 +26,6 @@ class ProviderMultipleResultError(AnimeMetadataProviderError):
 class ValidationError(AnimeMetadataError):
     pass
 
+
+class CacheDataNotFound(AnimeMetadataError):
+    pass

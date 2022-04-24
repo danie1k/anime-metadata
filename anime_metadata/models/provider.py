@@ -20,9 +20,6 @@ class ProviderCache(BaseModel):
 
     class Meta:
         table_name = "providers_cache"
-        indexes = (
-            (('id', 'provider'), True),
-        )
         primary_key = peewee.CompositeKey('id', 'provider', 'data_type')
 
     @classmethod
@@ -32,20 +29,24 @@ class ProviderCache(BaseModel):
                 cls.provider == provider,
                 cls.id == _id,
                 cls.data_type == _type,
-                )
+            )
         except peewee.DoesNotExist:
             return None
 
-        if result.last_update + constants.MAX_CACHE_LIFETIME < datetime.utcnow():
+        if result.last_update + constants.MAX_CACHE_LIFETIME <= datetime.utcnow():
             return None
 
         return result.data.tobytes()
 
     @classmethod
     def set(cls, provider: str, _id: str, _type: str, data: bytes) -> None:
-        cls.create(
+        item, _created = cls.get_or_create(
             id=_id,
             provider=provider,
             data_type=_type,
-            data=data,
+            defaults={
+                "data": data,
+            },
         )
+        item.data = data
+        item.save()
