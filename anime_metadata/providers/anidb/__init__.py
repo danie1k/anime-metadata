@@ -1,31 +1,30 @@
-import datetime
 import re
 import xml.etree.ElementTree as ET
 from collections import defaultdict, OrderedDict
 from pathlib import Path
-from typing import Optional, Union, Dict, List, NamedTuple, cast, Sequence, Set
+from typing import Optional, Union, Dict, cast, Sequence
 
 import requests
 from furl import furl
-from rapidfuzz.distance import Indel
 
-from anime_metadata import interfaces, dtos, models, utils, enums
-from anime_metadata.exceptions import ProviderMultipleResultError, ProviderNoResultError, ProviderResultFound, \
-    CacheDataNotFound
-from anime_metadata.typeshed import AnimeTitle, AnimeId, RawHtml, StaffList, Iso8601DateTimeStr, Iso8601DateStr, \
-    RawEpisode, CharacterList
+from anime_metadata import interfaces, dtos, utils, enums
+from anime_metadata.exceptions import ProviderResultFound, CacheDataNotFound
+from anime_metadata.typeshed import (
+    AnimeId,
+    AnimeTitle,
+    CharacterList,
+    Iso8601DateStr,
+    Iso8601DateTimeStr,
+    RawEpisode,
+    RawHtml,
+    StaffList,
+)
+
+from .typeshed import DatRow
 
 __all__ = (
     "AniDBProvider",
 )
-
-ANIDB_XML_NS = "{http://www.w3.org/XML/1998/namespace}"
-
-class DatRow(NamedTuple):
-    aid: AnimeId
-    type: str # 1=primary title (one per anime), 2=synonyms (multiple per anime), 3=shorttitles (multiple per anime), 4=official title (one per language)
-    language: str
-    title: AnimeTitle
 
 
 class Cache(interfaces.BaseCache):
@@ -141,6 +140,8 @@ def _xml_data_to_dto(raw_xml_doc: RawHtml) -> dtos.ProviderSeriesData:
 
 
 class AniDBXML:
+    NS = "{http://www.w3.org/XML/1998/namespace}"
+
     def __init__(self, raw_xml_doc: RawHtml) -> None:
         self.xml_root = ET.fromstring(raw_xml_doc)
         super().__init__()
@@ -259,7 +260,7 @@ class AniDBXML:
         }
 
         for item in elem.findall("./title"):
-            _lang = item.attrib[f"{ANIDB_XML_NS}lang"]
+            _lang = item.attrib[f"{AniDBXML.NS}lang"]
             _type = item.attrib.get("type", "main")
 
             if _lang not in ("x-jat", "en", "ja"):
