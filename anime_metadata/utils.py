@@ -1,5 +1,5 @@
 import re
-from typing import Union, List, Callable
+from typing import Union, List, Callable, Sequence
 import xml.etree.ElementTree as ET
 
 from rapidfuzz.distance import Indel
@@ -12,7 +12,7 @@ ANIDB_LINK_REMOVER = re.compile(r"https?://(www\.)?anidb\.net/[^\s]+\s\[([^\]]+)
 
 def find_title_in_provider_results(
     title: AnimeTitle,
-    data: List[ApiResponseData],
+    data: Sequence[ApiResponseData],
     data_item_title_getter: Callable[[ApiResponseData], AnimeTitle],
     title_similarity_factor: float,
 ) -> None:
@@ -97,6 +97,10 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
 
     result = re.sub(r' {2,}', ' ', result)
     result = ANIDB_LINK_REMOVER.sub('\\2', result)
+
+    # TODO: Remove:
+    #  - Line beginning with: "Source ..."
+    #  - Text containing: "(Source ...)"
 
     result = "\n".join(
         line.strip("*").strip() for line in result.splitlines()

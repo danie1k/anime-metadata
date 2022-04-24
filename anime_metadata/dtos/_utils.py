@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 import attr
-from dateutil.parser import parse as dateutil_parse
+from dateutil.parser import parse as dateutil_parse, ParserError
 import datetime
 from typing import Any, Union, TYPE_CHECKING, Set, Sequence
 
@@ -28,7 +28,10 @@ def date_converter(value: Any) -> Union[datetime.date, None]:
     if not value:
         return None
 
-    return dateutil_parse(value).date()
+    try:
+        return dateutil_parse(value).date()
+    except ParserError:
+        return None
 
 
 def genres_converter(value: Any) -> Sequence[str]:

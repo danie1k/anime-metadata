@@ -1,4 +1,4 @@
-from typing import Union, Any, Dict, Set, OrderedDict
+from typing import Union, Any, Dict, Set, OrderedDict, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -16,7 +16,7 @@ EpisodeId = Union[int, str]
 EpisodeNumber = int
 EpisodeTitle = str
 
-ApiResponseData = Dict[str, Any]
+ApiResponseData = Union[Dict[str, Any], NamedTuple]
 
 CharacterList = OrderedDict[CharacterName, CharacterId]
 StaffList = Dict[PositionName, Set[PersonName]]
@@ -41,6 +41,7 @@ class RawEpisode(TypedDict, total=False):
     no: EpisodeNumber
     plot: str
     premiered: str
+    rating: str
     title_en: EpisodeTitle
     title_jp: EpisodeTitle
     title_jp_jp: EpisodeTitle
