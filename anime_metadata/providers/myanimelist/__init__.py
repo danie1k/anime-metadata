@@ -298,6 +298,9 @@ class MALApi:
         if "book" in _source or _source in ["novel", "light_novel"]:
             return enums.SourceMaterial.LIGHT_NOVEL
 
+        if "original" in _source:
+            return enums.SourceMaterial.ORIGINAL
+
         return enums.SourceMaterial.OTHER
 
     def get_studios(self) -> Set[str]:

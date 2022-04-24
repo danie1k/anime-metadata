@@ -2,10 +2,13 @@ import re
 import xml.etree.ElementTree as ET
 from collections import defaultdict, OrderedDict
 from pathlib import Path
-from typing import Optional, Union, Dict, cast, Sequence
+from typing import Optional, Union, Dict, cast, Sequence, Set, List
 
 import requests
+from bs4 import BeautifulSoup
 from furl import furl
+from lxml import html
+from lxml.html import HtmlElement
 
 from anime_metadata import interfaces, dtos, utils, enums
 from anime_metadata.exceptions import ProviderResultFound, CacheDataNotFound
@@ -64,6 +67,14 @@ class AniDBProvider(interfaces.BaseProvider):
             return self._get_series_by_id(cast(DatRow, exc.data_item).aid)
 
     def _get_series_by_id(self, anime_id: AnimeId) -> dtos.ProviderSeriesData:
+        return _raw_data_to_dto(
+            self._get_anime_from_api(anime_id),
+            self._get_anime_from_web(anime_id),
+        )
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def _get_anime_from_api(self, anime_id: AnimeId) -> RawHtml:
         with Cache("httpapi,anime", anime_id) as cache:
             try:
                 raw_xml_doc = cache.get()
@@ -81,20 +92,40 @@ class AniDBProvider(interfaces.BaseProvider):
                 if raw_xml_doc.startswith(b"<error"):
                     raise requests.HTTPError(raw_xml_doc.decode("utf-8"))
 
-        return _xml_data_to_dto(raw_xml_doc)
+        return raw_xml_doc
+
+    def _get_anime_from_web(self, anime_id: AnimeId) -> RawHtml:
+        with Cache("web,anime", anime_id) as cache:
+            try:
+                raw_html_page = cache.get()
+            except CacheDataNotFound:
+                raw_html_page = self.get_request(
+                    furl(f"https://anidb.net/anime/{anime_id}"),
+                    headers={
+                        "User-Agent": (
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                            "(KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
+                        ),
+                        "Referer": "https://anidb.net",
+                    }
+                )
+                cache.set(raw_html_page)
+
+        return raw_html_page
 
 
-def _xml_data_to_dto(raw_xml_doc: RawHtml) -> dtos.ProviderSeriesData:
-    parser = AniDBXML(raw_xml_doc)
+def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.ProviderSeriesData:
+    xml_parser = AniDBXML(raw_xml_doc)
+    web_parser = AniDBWeb(anime_page=web_html_page)
 
-    characters = parser.get_characters()
-    episodes = parser.get_episodes()
-    main_staff = parser.get_main_staff()
-    titles = parser.get_titles()
+    characters = xml_parser.get_characters()
+    episodes = xml_parser.get_episodes()
+    main_staff = xml_parser.get_main_staff()
+    titles = xml_parser.get_titles()
 
     return dtos.ProviderSeriesData(
         # ID
-        id=parser.get_id(),
+        id=xml_parser.get_id(),
         # TODO: actors=[
         #         dtos.ShowActor(name=seiyuu, role=name)
         #         for name, seiyuu in list(_characters["main"].items()) + list(_characters["supporting"].items())
@@ -102,34 +133,34 @@ def _xml_data_to_dto(raw_xml_doc: RawHtml) -> dtos.ProviderSeriesData:
         # )
         # DATES
         dates=dtos.ShowDate(
-            premiered=parser.get_date("startdate"),
-            ended=parser.get_date("enddate"),
+            premiered=xml_parser.get_date("startdate"),
+            ended=xml_parser.get_date("enddate"),
         ),
-        # TODO: EPISODES
-        episodes=raw_episodes_list_to_dtos(episodes, enums.EpisodeType.REGULAR),
-        # TODO: GENRES
-        genres=None,
+        # EPISODES
+        episodes=raw_episodes_list_to_dtos(episodes, enums.EpisodeType.REGULAR, web_parser.extract_episodes_count()),
+        # GENRES
+        genres=web_parser.extract_tags_from_html(),
         # IMAGES
         images=dtos.ShowImage(
             base_url="https://cdn-eu.anidb.net/images/main/",
-            folder=parser.get_picture()
+            folder=xml_parser.get_picture()
         ),
-        # TODO: MPAA
+        # MPAA
         mpaa=None,
         # PLOT
-        plot=parser.get_plot(),
+        plot=xml_parser.get_plot(),
         # RATING
-        rating=parser.get_rating(),
-        # TODO: SOURCE MATERIAL
-        source_material=None,
+        rating=xml_parser.get_rating(),
+        # SOURCE MATERIAL
+        source_material=web_parser.extract_source_material(),
         # STAFF
         staff=dtos.ShowStaff(
             director=utils.collect_staff(main_staff, "direction", "director"),
             music=utils.collect_staff(main_staff, "music"),
             screenwriter=utils.collect_staff(main_staff, "composition")
         ),
-        # TODO: STUDIOS
-        studios=None,
+        # STUDIOS
+        studios=main_staff.get("Animation Work", []),
         # TITLES
         titles=dtos.ShowTitle(
             en=titles["en"],
@@ -283,12 +314,101 @@ class AniDBXML:
         }
 
 
+class AniDBWeb:
+    source_material_tags = {
+        # https://anidb.net/tag/2609/animetb
+        2609: "original work",
+        4424: "American derived",
+        7252: "CG collection",
+        2800: "game",
+        2798: "manga",
+        6493: "manhua",
+        5010: "manhwa",
+        2796: "movie",
+        2797: "new",
+        2799: "novel",
+        7469: "picture book",
+        6453: "radio programme",
+        6446: "television programme",
+        3714: "Western animated cartoon",
+        3430: "Western comics",
+    }
+
+    def __init__(self, *, anime_page: bytes = None) -> None:
+        self.anime_page = anime_page
+        super().__init__()
+
+    def extract_episodes_count(self) -> int:
+        if not self.anime_page:
+            raise ValueError
+        the_page = self._load_html(self.anime_page)
+
+        return int(the_page.xpath("//*[@itemprop='numberOfEpisodes']")[0].text.strip())
+
+    def extract_source_material(self) -> enums.SourceMaterial:
+        result = [
+            item["name"]
+            for item in self._get_all_tags()
+            if item["id"] in self.source_material_tags.keys()
+        ]
+        if len(result) != 1:
+            raise NotImplementedError
+
+        _source = result[0].lower()
+
+        if "manga" in _source or _source in ["manhua", "manhwa"]:
+            return enums.SourceMaterial.MANGA
+
+        if "game" in _source:
+            return enums.SourceMaterial.GAME
+
+        if "novel" in _source:
+            return enums.SourceMaterial.LIGHT_NOVEL
+
+        if "original" in _source:
+            return enums.SourceMaterial.ORIGINAL
+
+        # return enums.SourceMaterial.OTHER
+        raise NotImplementedError
+
+    def extract_tags_from_html(self) -> Set[str]:
+        return {
+            item["name"]
+            for item in self._get_all_tags()
+            if item["id"] not in self.source_material_tags.keys()
+        }
+
+    def _get_all_tags(self) -> List[Dict[str, Union[int, str]]]:
+        if not self.anime_page:
+            raise ValueError
+        the_page = self._load_html(self.anime_page)
+
+        result = []
+        for item in the_page.xpath("//span[contains(@class, 'tagname')][@itemprop='genre']"):
+            result.append({
+                "id": int(item.xpath("./ancestor::a[position()=1]")[0].attrib["href"].split("/")[2]),
+                "name": item.text.strip(),
+            })
+
+        return result
+
+    def _load_html(self, data: bytes) -> HtmlElement:
+        return html.fromstring(str(BeautifulSoup(utils.minimize_html(data.decode("utf-8")), "html.parser")))
+
+
 def raw_episodes_list_to_dtos(
     episodes_list: Dict[enums.EpisodeType, Sequence[RawEpisode]],
     _type: enums.EpisodeType,
+    total_episodes: int = None,
 ) -> Sequence[dtos.ShowEpisode]:
     if not episodes_list.get(_type):
         return []
+
+    if total_episodes is not None:
+        if total_episodes == 0:
+            return []
+        if len(episodes_list[_type]) != total_episodes:
+            raise NotImplementedError
 
     result = []
 
@@ -306,5 +426,8 @@ def raw_episodes_list_to_dtos(
             ),
             type=_type,
         ))
+
+    if len(result) != total_episodes:
+        raise NotImplementedError
 
     return result

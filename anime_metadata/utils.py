@@ -99,11 +99,19 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
     result = ANIDB_LINK_REMOVER.sub('\\2', result)
 
     # TODO: Remove:
-    #  - Line beginning with: "Source ..."
     #  - Text containing: "(Source ...)"
 
+    def _line_filter(value: str) -> bool:
+        value = value.strip()
+        if value.lower().startswith("source:") or value.lower().startswith("note:"):
+            return False
+        return bool(value)
+
     result = "\n".join(
-        line.strip("*").strip() for line in result.splitlines()
+        filter(
+            _line_filter,
+            (line.strip("*").strip() for line in result.splitlines()),
+        )
     )
 
     return result

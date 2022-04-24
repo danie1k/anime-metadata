@@ -42,4 +42,5 @@ class SourceMaterial(enum.Enum):
     GAME = enum.auto()
     LIGHT_NOVEL = enum.auto()
     MANGA = enum.auto()
+    ORIGINAL = enum.auto()
     OTHER = enum.auto()
