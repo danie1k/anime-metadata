@@ -426,12 +426,16 @@ class MALWeb:
 
         _table: HtmlElement = the_page.xpath("//table[contains(@class, 'episode_list')][contains(@class, 'ascend')]")[0]
         for episode in _table.xpath("./tr[contains(@class, 'episode-list-data')]"):  # type: HtmlElement
-            result.append({
+            ep = {
                 "no": int(episode.xpath("./td[contains(@class, 'episode-number')]")[0].text.strip()),
                 "title_en": episode.xpath("./td[contains(@class, 'episode-title')]/a")[0].text.strip(),
-                "title_jp": episode.xpath("./td[contains(@class, 'episode-title')]/span")[0].text.strip(),
                 "premiered": episode.xpath("./td[contains(@class, 'episode-aired')]")[0].text.strip(),
-            })
+            }
+            try:
+                ep["title_jp"] = episode.xpath("./td[contains(@class, 'episode-title')]/span")[0].text.strip()
+            except AttributeError:
+                pass
+            result.append(ep)
 
         return result
 
@@ -455,7 +459,12 @@ def raw_episodes_list_to_dtos(
     for i in range(1, total_episodes + 1):
         if i not in _episodes:
             continue
-        _titles = _episodes[i]["title_jp"].split("(")
+
+        try:
+            jp_titles = _episodes[i]["title_jp"].split("(")
+        except KeyError:
+            jp_titles = []
+
         result.append(dtos.ShowEpisode(
             no=i,
             id=episode_id(anime_id, i),
@@ -464,8 +473,8 @@ def raw_episodes_list_to_dtos(
             rating=None,
             titles=dtos.ShowTitle(
                 en=_episodes[i]["title_en"],
-                jp_romanized=_titles[0].strip(" ()\xa0"),
-                jp_jp=_titles[1].strip(" ()\xa0") if len(_titles) == 2 else None
+                jp_romanized=jp_titles[0].strip(" ()\xa0") if jp_titles else None,
+                jp_jp=jp_titles[1].strip(" ()\xa0") if len(jp_titles) == 2 else None
             ),
         ))
 

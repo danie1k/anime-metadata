@@ -1,9 +1,10 @@
 from typing import Dict, Any, List, Union
-from mypy_extensions import TypedDict
-from anime_metadata.typeshed import AnimeId, ApiResponseData, Iso8601DateTimeStr, Iso8601DateStr, AnimeTitle
+from typing_extensions import TypedDict
+
+from anime_metadata.typeshed import AnimeId, Iso8601DateTimeStr, Iso8601DateStr, AnimeTitle
 
 
-class MALApiResponseData(TypedDict, ApiResponseData):
+class MALApiResponseData(TypedDict):
     alternative_titles: Dict[str, Union[AnimeTitle, List[AnimeTitle]]]
     average_episode_duration: int
     background: str
