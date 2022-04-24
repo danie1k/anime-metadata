@@ -55,7 +55,7 @@ class AniDBProvider(interfaces.BaseProvider):
         self.title_similarity_factor = title_similarity_factor
         super().__init__()
 
-    def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.ProviderSeriesData:
+    def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         try:
             utils.find_title_in_provider_results(
                 title=title,
@@ -66,7 +66,7 @@ class AniDBProvider(interfaces.BaseProvider):
         except ProviderResultFound as exc:
             return self._get_series_by_id(cast(DatRow, exc.data_item).aid)
 
-    def _get_series_by_id(self, anime_id: AnimeId) -> dtos.ProviderSeriesData:
+    def _get_series_by_id(self, anime_id: AnimeId) -> dtos.TvSeriesData:
         return _raw_data_to_dto(
             self._get_anime_from_api(anime_id),
             self._get_anime_from_web(anime_id),
@@ -114,7 +114,7 @@ class AniDBProvider(interfaces.BaseProvider):
         return raw_html_page
 
 
-def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.ProviderSeriesData:
+def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSeriesData:
     xml_parser = AniDBXML(raw_xml_doc)
     web_parser = AniDBWeb(anime_page=web_html_page)
 
@@ -123,14 +123,20 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.Provi
     main_staff = xml_parser.get_main_staff()
     titles = xml_parser.get_titles()
 
-    return dtos.ProviderSeriesData(
+    return dtos.TvSeriesData(
         # ID
         id=xml_parser.get_id(),
-        # TODO: actors=[
-        #         dtos.ShowActor(name=seiyuu, role=name)
-        #         for name, seiyuu in list(_characters["main"].items()) + list(_characters["supporting"].items())
-        #     ]
-        # )
+        # CHARACTERS
+        characters=[
+            *[
+                dtos.ShowCharacter(name=name, seiyuu=seiyuu)
+                for name, seiyuu in characters[enums.CharacterType.MAIN].items()
+            ],
+            *[
+                dtos.ShowCharacter(name=name, seiyuu=seiyuu)
+                for name, seiyuu in characters[enums.CharacterType.SUPPORTING].items()
+            ],
+        ],
         # DATES
         dates=dtos.ShowDate(
             premiered=xml_parser.get_date("startdate"),

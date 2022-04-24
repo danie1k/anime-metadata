@@ -16,13 +16,13 @@ from anime_metadata.typeshed import AnimeId
 
 class BaseProvider:
 
-    def _get_series_by_id(self, anime_id: AnimeId) -> dtos.ProviderSeriesData:
+    def _get_series_by_id(self, anime_id: AnimeId) -> dtos.TvSeriesData:
         raise NotImplementedError
 
-    def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.ProviderSeriesData:
+    def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         raise NotImplementedError
 
-    def get_series(self, anime_id: AnimeId) -> dtos.ProviderSeriesData:
+    def get_series(self, anime_id: AnimeId) -> dtos.TvSeriesData:
         return self._get_series_by_id(anime_id)
 
     def search_series(
@@ -30,7 +30,7 @@ class BaseProvider:
         en_title: Optional[AnimeTitle] = None,
         jp_title: Optional[AnimeTitle] = None,
         year: Optional[int] = None,
-    ) -> dtos.ProviderSeriesData:
+    ) -> dtos.TvSeriesData:
         if en_title is None and jp_title is None:
             raise ValidationError('At least one "title" argument is required!')
 

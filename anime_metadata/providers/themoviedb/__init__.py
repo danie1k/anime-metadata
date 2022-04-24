@@ -3,7 +3,6 @@ from typing import Optional
 
 from furl import furl
 
-import anime_metadata.dtos.show
 from anime_metadata import interfaces, dtos, utils
 from anime_metadata.exceptions import ProviderResultFound, CacheDataNotFound
 from anime_metadata.typeshed import AnimeTitle, ApiResponseData, TvShowId
@@ -24,7 +23,7 @@ class TMDBProvider(interfaces.BaseProvider):
         self.title_similarity_factor = title_similarity_factor
         super().__init__()
 
-    def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.ProviderSeriesData:
+    def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         # https://developers.themoviedb.org/3/search/search-tv-shows
         url = furl("https://api.themoviedb.org/3/search/tv")
         url.set({
@@ -51,7 +50,7 @@ class TMDBProvider(interfaces.BaseProvider):
         except ProviderResultFound as exc:
             return self._get_series_by_id(str(exc.data_item["id"]))
 
-    def _get_series_by_id(self, show_id: TvShowId) -> dtos.ProviderSeriesData:
+    def _get_series_by_id(self, show_id: TvShowId) -> dtos.TvSeriesData:
         with Cache("apiv3,tv", show_id) as cache:
             try:
                 raw_stringified_json = cache.get()
@@ -69,19 +68,17 @@ class TMDBProvider(interfaces.BaseProvider):
         return _json_data_to_dto(json.loads(raw_stringified_json))
 
 
-def _json_data_to_dto(json_data: ApiResponseData) -> dtos.ProviderSeriesData:
+def _json_data_to_dto(json_data: ApiResponseData) -> dtos.TvSeriesData:
     if json_data.get("created_by"):
         raise NotImplementedError("created_by")
 
-    return dtos.ProviderSeriesData(
+    return dtos.TvSeriesData(
         # ID
         id=json_data["id"],
-        # TODO: actors=[
-        #     anime_metadata.dtos.show.ShowActor(name=seiyuu, role=name)
-        #     for name, seiyuu in list(_characters["main"].items()) + list(_characters["supporting"].items())
-        # ],
+        # CHARACTERS
+        characters=[],
         # DATES
-        dates=anime_metadata.dtos.show.ShowDate(
+        dates=dtos.ShowDate(
             premiered=json_data.get("first_air_date"),
             ended=json_data.get("last_air_date"),
         ),
@@ -90,7 +87,7 @@ def _json_data_to_dto(json_data: ApiResponseData) -> dtos.ProviderSeriesData:
         # GENRES
         genres=set(item["name"] for item in json_data.get("genres", [])),
         # IMAGES
-        images=anime_metadata.dtos.show.ShowImage(
+        images=dtos.ShowImage(
             base_url="https://www.themoviedb.org/t/p/original",
             backdrop=json_data.get("backdrop_path"),
             folder=json_data.get("poster_path"),
@@ -104,7 +101,7 @@ def _json_data_to_dto(json_data: ApiResponseData) -> dtos.ProviderSeriesData:
         # SOURCE MATERIAL
         source_material=None,
         # STAFF
-        staff=anime_metadata.dtos.show.ShowStaff(
+        staff=dtos.ShowStaff(
             # TODO
         ),
         # STUDIOS
@@ -113,7 +110,7 @@ def _json_data_to_dto(json_data: ApiResponseData) -> dtos.ProviderSeriesData:
             *(item["name"] for item in json_data.get("production_companies", [])),
         ]),
         # TITLES
-        titles=anime_metadata.dtos.show.ShowTitle(
+        titles=dtos.ShowTitle(
             en=json_data.get("name"),
             jp_jp=json_data.get("original_name"),
         ),

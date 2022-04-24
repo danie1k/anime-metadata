@@ -73,7 +73,7 @@ class MALProvider(interfaces.BaseProvider):
         self.title_similarity_factor = title_similarity_factor
         super().__init__()
 
-    def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.ProviderSeriesData:
+    def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         url = furl("https://myanimelist.net/search/prefix.json")
         url.set({
             "keyword": title,
@@ -100,7 +100,7 @@ class MALProvider(interfaces.BaseProvider):
         except ProviderResultFound as exc:
             return self._get_series_by_id(str(exc.data_item["id"]))
 
-    def _get_series_by_id(self, anime_id: AnimeId) -> dtos.ProviderSeriesData:
+    def _get_series_by_id(self, anime_id: AnimeId) -> dtos.TvSeriesData:
         characters_list = self._get_anime_characters_from_web(anime_id)
 
         return _raw_data_to_dto(
@@ -212,16 +212,19 @@ def _raw_data_to_dto(
     mal_api_data: MALApiResponseData,
     staff_list: StaffList,
     supporting_characters: OrderedDict[CharacterName, RawCharacter],
-) -> dtos.ProviderSeriesData:
+) -> dtos.TvSeriesData:
     api_data_parser = MALApi(mal_api_data)
 
-    return dtos.ProviderSeriesData(
+    characters = []
+    for name, data in list(main_characters.items()) + list(supporting_characters.items()):
+        for seiyuu in data["seiyuu"].get("Japanese", []):
+            characters.append(dtos.ShowCharacter(name=name, seiyuu=seiyuu))
+
+    return dtos.TvSeriesData(
         # ID
         id=mal_api_data["id"],
-        # TODO: actors=[
-        #     anime_metadata.dtos.show.ShowActor(name=seiyuu, role=name)
-        #     for name, seiyuu in list(_characters["main"].items()) + list(_characters["supporting"].items())
-        # ],
+        # CHARACTER
+        characters=characters,
         # DATES
         dates=dtos.ShowDate(
             premiered=mal_api_data.get("start_date"),
@@ -343,7 +346,7 @@ class MALWeb:
             _td: HtmlElement = _h3.xpath("./ancestor::td[position()=1]")[0]
             _href: HtmlElement = _h3.xpath("./ancestor::a[position()=1]")[0]
 
-            _name: str = _h3.text.strip()
+            _name: str = _h3.text.split("(")[0].strip()
             _type: str = _td.xpath("./*[contains(@class, 'spaceit_pad')][position()=2]")[0].text.strip()
             _id: str = _href.attrib["href"].split("character/")[-1].split("/", 1)[0]
 
@@ -392,7 +395,7 @@ class MALWeb:
         _seiyuus: List[HtmlElement] = _content.xpath("//table//a[contains(@href, 'myanimelist.net/people/')]")
 
         result: RawCharacter = {
-            "name_en": _name_en.text.strip(),
+            "name_en": _name_en.text.split("(")[0].strip(),
             "seiyuu": collections.defaultdict(set),
         }
 

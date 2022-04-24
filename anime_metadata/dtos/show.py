@@ -9,7 +9,7 @@ from anime_metadata.typeshed import AnimeTitle
 from . import _utils
 
 __all__ = (
-    "ShowActor",
+    "ShowCharacter",
     "ShowDate",
     "ShowEpisode",
     "ShowImage",
@@ -19,9 +19,9 @@ __all__ = (
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class ShowActor:
+class ShowCharacter:
     name: str
-    role: str
+    seiyuu: str
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)

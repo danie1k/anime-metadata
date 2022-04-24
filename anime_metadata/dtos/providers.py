@@ -7,13 +7,13 @@ from anime_metadata import enums
 from . import show, _utils
 
 __all__ = (
-    "ProviderSeriesData",
+    "TvSeriesData",
 )
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ProviderData:
-    # TODO: actors: Iterable[show.ShowActor] = []
+    characters: Sequence[show.ShowCharacter] = []
     dates: show.ShowDate
     genres: Sequence[str] = attr.ib(converter=_utils.genres_converter)
     id: str
@@ -28,5 +28,5 @@ class ProviderData:
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class ProviderSeriesData(ProviderData):
+class TvSeriesData(ProviderData):
     episodes: Sequence[show.ShowEpisode]
