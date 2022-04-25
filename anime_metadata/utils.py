@@ -10,7 +10,7 @@ from anime_metadata.typeshed import AnimeTitle, ApiResponseData, StaffList
 ANIDB_LINK_REMOVER = re.compile(r"https?://(www\.)?anidb\.net/[^\s]+\s\[([^\]]+)\]")
 
 
-def find_title_in_provider_results(
+def find_title_in_provider_results(  # noqa: C901
     title: AnimeTitle,
     data: Sequence[ApiResponseData],
     data_item_title_getter: Callable[[ApiResponseData], AnimeTitle],
@@ -66,12 +66,12 @@ def minimize_html(html: str) -> str:
     """
     Remove distracting whitespaces and newline characters
     """
-    pat = re.compile('(^[\s]+)|([\s]+$)', re.MULTILINE)
-    html = re.sub(pat, '', html)       # remove leading and trailing whitespaces
-    html = re.sub('\n', ' ', html)     # convert newlines to spaces
+    pat = re.compile(r"(^[\s]+)|([\s]+$)", re.MULTILINE)
+    html = re.sub(pat, "", html)  # remove leading and trailing whitespaces
+    html = re.sub("\n", " ", html)  # convert newlines to spaces
     # this preserves newline delimiters
-    html = re.sub('[\s]+<', '<', html) # remove whitespaces before opening tags
-    html = re.sub('>[\s]+', '>', html) # remove whitespaces after closing tags
+    html = re.sub(r"[\s]+<", "<", html)  # remove whitespaces before opening tags
+    html = re.sub(r">[\s]+", ">", html)  # remove whitespaces after closing tags
     return html
 
 
@@ -84,15 +84,15 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
 
     result = (
         value
-            .replace("`", "'")
-            .replace("’", "'")
-            .replace('“', '"')
-            .replace('”', '"')
-            .replace('…', '...')
-            .replace('—', '-')
-            .replace('."', '".')
-            .replace(',"', '",')
-            .replace(';"', '";')
+        .replace("`", "'")
+        .replace("’", "'")
+        .replace('“', '"')
+        .replace('”', '"')
+        .replace('…', '...')
+        .replace('—', '-')
+        .replace('."', '".')
+        .replace(',"', '",')
+        .replace(';"', '";')
     )
 
     result = re.sub(r' {2,}', ' ', result)

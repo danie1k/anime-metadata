@@ -40,7 +40,7 @@ MAL_DATA = {
     "main_picture",
     "mean",
     "media_type",
-    #"my_list_status",
+    # "my_list_status",
     "nsfw",
     "num_episodes",
     "num_list_users",
@@ -199,7 +199,7 @@ class MALProvider(interfaces.BaseProvider):
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
                     furl(f"https://myanimelist.net/character/{anime_id}"),
-                    headers={"Referer": f"https://myanimelist.net/"},
+                    headers={"Referer": "https://myanimelist.net/"},
                 )
                 cache.set(raw_html_page)
 
@@ -279,12 +279,12 @@ class MALApi:
 
     def get_mpaa(self) -> enums.MPAA:
         mal2mpaa = {
-            "g":     enums.MPAA.G,      # All Ages
-            "pg":    enums.MPAA.PG,     # Children
-            "pg_13": enums.MPAA.PG_13,  # Teens 13 or older
-            "r":     enums.MPAA.R,      # 17+ (violence & profanity)
-            "r+":    enums.MPAA.NC_17,  # Mild Nudity
-            "rx":    enums.MPAA.X,      # Hentai
+            "g":     enums.MPAA.G,      # All Ages                    # noqa: E241
+            "pg":    enums.MPAA.PG,     # Children                    # noqa: E241
+            "pg_13": enums.MPAA.PG_13,  # Teens 13 or older           # noqa: E241
+            "r":     enums.MPAA.R,      # 17+ (violence & profanity)  # noqa: E241
+            "r+":    enums.MPAA.NC_17,  # Mild Nudity                 # noqa: E241
+            "rx":    enums.MPAA.X,      # Hentai                      # noqa: E241
         }
         return mal2mpaa.get(self.mal_api_data.get("rating", "").lower(), "G")
 
@@ -421,7 +421,7 @@ class MALWeb:
         return {
             "synopsis": utils.normalize_string(
                 the_page.xpath("//h2[contains(text(), 'Synopsis')]/ancestor::*[position()=1]")[0]
-                    .text_content()[8:]
+                .text_content()[8:]
             ),
         }
 
@@ -451,7 +451,7 @@ class MALWeb:
         return html.fromstring(str(BeautifulSoup(utils.minimize_html(data.decode("utf-8")), "html.parser")))
 
 
-def raw_episodes_list_to_dtos(
+def raw_episodes_list_to_dtos(  # noqa: C901
     episodes_list: Sequence[RawEpisode],
     total_episodes: int,
     anime_id: str

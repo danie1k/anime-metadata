@@ -32,4 +32,3 @@ class BaseCache(ContextDecorator, AbstractContextManager):
 
     def set(self, value: RawHtml) -> None:
         return models.ProviderCache.set(self.provider_name, self.id, self.data_type, value)
-

@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Sequence, Set, Union
+from typing import TYPE_CHECKING, Any, Sequence, Union
 
 import attr
 from dateutil.parser import ParserError, parse as dateutil_parse
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 # Converters
 
 
-def date_converter(value: Any) -> Union[datetime.date, None]:
+def date_converter(value: Any) -> Union[datetime.date, None]:  # noqa: C901
     if isinstance(value, datetime.date):
         return value
     if value is None:

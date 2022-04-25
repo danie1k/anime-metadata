@@ -36,6 +36,7 @@ class Cache(interfaces.BaseCache):
 
 # TODO: Add web scraping
 
+
 class AniDBProvider(interfaces.BaseProvider):
     def __init__(
         self,
@@ -211,7 +212,7 @@ class AniDBXML:
             return None
         return result.text.strip()
 
-    def get_episodes(self) -> Dict[enums.EpisodeType, Sequence[RawEpisode]]:
+    def get_episodes(self) -> Dict[enums.EpisodeType, Sequence[RawEpisode]]:  # noqa: C901
         result = {
             enums.EpisodeType.REGULAR: [],
             enums.EpisodeType.SPECIAL: [],
@@ -403,7 +404,7 @@ class AniDBWeb:
         return html.fromstring(str(BeautifulSoup(utils.minimize_html(data.decode("utf-8")), "html.parser")))
 
 
-def raw_episodes_list_to_dtos(
+def raw_episodes_list_to_dtos(  # noqa: C901
     episodes_list: Dict[enums.EpisodeType, Sequence[RawEpisode]],
     _type: enums.EpisodeType,
     total_episodes: int = None,

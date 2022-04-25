@@ -37,4 +37,3 @@ class MALApiResponseData(TypedDict):
     synopsis: str
     title: AnimeTitle
     updated_at: Iso8601DateTimeStr
-

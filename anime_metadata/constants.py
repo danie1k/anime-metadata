@@ -2,7 +2,6 @@ import datetime
 
 import peewee
 
-
 INDENT_SIZE = 2
 
 DB = peewee.PostgresqlDatabase(

@@ -11,8 +11,6 @@ __all__ = (
     "BaseProvider",
 )
 
-from anime_metadata.typeshed import AnimeId
-
 
 class BaseProvider:
 
@@ -46,7 +44,7 @@ class BaseProvider:
             f'Cannot find {self.__class__.__name__} for en_title={en_title} / jp_title={jp_title}'
         )
 
-    def get_request(self, url: furl,  *args, **kwargs) -> bytes:
+    def get_request(self, url: furl, *args, **kwargs) -> bytes:
         response = requests.get(url.tostr(), *args, **kwargs)
         response.raise_for_status()
         return response.content
