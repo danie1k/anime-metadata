@@ -1,11 +1,12 @@
 import datetime
 from decimal import Decimal
-from typing import Union, List
+from typing import List, Union
 
 import attr
 
 from anime_metadata import enums
 from anime_metadata.typeshed import AnimeTitle
+
 from . import _utils
 
 __all__ = (

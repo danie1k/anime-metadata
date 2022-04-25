@@ -4,6 +4,7 @@ from typing import Union
 import peewee
 
 from anime_metadata import constants
+
 from .base import BaseModel
 
 __all__ = (

@@ -1,10 +1,10 @@
 from typing import Optional
 
-import requests
 from furl import furl
+import requests
 
 from anime_metadata import dtos
-from anime_metadata.exceptions import ValidationError, ProviderNoResultError
+from anime_metadata.exceptions import ProviderNoResultError, ValidationError
 from anime_metadata.typeshed import AnimeId, AnimeTitle
 
 __all__ = (

@@ -1,4 +1,4 @@
-from typing import Union, Any, Dict, Set, OrderedDict, NamedTuple
+from typing import Any, Dict, NamedTuple, OrderedDict, Set, Union
 
 from typing_extensions import TypedDict
 

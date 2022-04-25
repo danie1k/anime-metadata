@@ -1,14 +1,14 @@
-import json
 import collections
-from typing import Optional, Dict, List, Set, Sequence, OrderedDict
+import json
+from typing import Dict, List, Optional, OrderedDict, Sequence, Set
 
 from bs4 import BeautifulSoup
 from furl import furl
 from lxml import html
 from lxml.html import HtmlElement
 
-from anime_metadata import interfaces, dtos, utils, enums
-from anime_metadata.exceptions import ProviderResultFound, CacheDataNotFound
+from anime_metadata import dtos, enums, interfaces, utils
+from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
 from anime_metadata.typeshed import (
     AnimeId,
     AnimeTitle,
@@ -20,6 +20,7 @@ from anime_metadata.typeshed import (
     RawEpisode,
     StaffList,
 )
+
 from .typeshed import MALApiResponseData
 
 __all__ = (

@@ -1,10 +1,11 @@
 from decimal import Decimal
-from typing import Union, Sequence, Any, Optional
+from typing import Any, Optional, Sequence, Union
 
 import attr
 
 from anime_metadata import enums
-from . import show, _utils
+
+from . import _utils, show
 
 __all__ = (
     "TvSeriesData",

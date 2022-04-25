@@ -1,7 +1,8 @@
-from typing import Dict, Any, List, Union
+from typing import Any, Dict, List, Union
+
 from typing_extensions import TypedDict
 
-from anime_metadata.typeshed import AnimeId, Iso8601DateTimeStr, Iso8601DateStr, AnimeTitle
+from anime_metadata.typeshed import AnimeId, AnimeTitle, Iso8601DateStr, Iso8601DateTimeStr
 
 
 class MALApiResponseData(TypedDict):

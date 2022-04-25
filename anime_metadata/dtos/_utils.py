@@ -1,10 +1,9 @@
+import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING, Any, Sequence, Set, Union
 
 import attr
-from dateutil.parser import parse as dateutil_parse, ParserError
-import datetime
-from typing import Any, Union, TYPE_CHECKING, Set, Sequence
-
+from dateutil.parser import ParserError, parse as dateutil_parse
 from furl import furl
 
 from anime_metadata import utils

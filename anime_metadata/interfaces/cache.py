@@ -1,4 +1,4 @@
-from contextlib import ContextDecorator, AbstractContextManager
+from contextlib import AbstractContextManager, ContextDecorator
 from typing import Optional
 
 from anime_metadata import models

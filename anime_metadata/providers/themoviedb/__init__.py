@@ -3,8 +3,8 @@ from typing import Optional
 
 from furl import furl
 
-from anime_metadata import interfaces, dtos, utils
-from anime_metadata.exceptions import ProviderResultFound, CacheDataNotFound
+from anime_metadata import dtos, interfaces, utils
+from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
 from anime_metadata.typeshed import AnimeTitle, ApiResponseData, TvShowId
 
 __all__ = (

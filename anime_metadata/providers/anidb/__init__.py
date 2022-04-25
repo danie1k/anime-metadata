@@ -1,17 +1,17 @@
-import re
-import xml.etree.ElementTree as ET
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from pathlib import Path
-from typing import Optional, Union, Dict, cast, Sequence, Set, List
+import re
+from typing import Dict, List, Optional, Sequence, Set, Union, cast
+import xml.etree.ElementTree as ET
 
-import requests
 from bs4 import BeautifulSoup
 from furl import furl
 from lxml import html
 from lxml.html import HtmlElement
+import requests
 
-from anime_metadata import interfaces, dtos, utils, enums
-from anime_metadata.exceptions import ProviderResultFound, CacheDataNotFound
+from anime_metadata import dtos, enums, interfaces, utils
+from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
 from anime_metadata.typeshed import (
     AnimeId,
     AnimeTitle,

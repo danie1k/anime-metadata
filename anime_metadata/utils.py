@@ -1,11 +1,11 @@
 import re
-from typing import Union, List, Callable, Sequence
+from typing import Callable, List, Sequence, Union
 import xml.etree.ElementTree as ET
 
 from rapidfuzz.distance import Indel
 
-from anime_metadata.exceptions import ProviderNoResultError, ProviderResultFound, ProviderMultipleResultError
-from anime_metadata.typeshed import StaffList, ApiResponseData, AnimeTitle
+from anime_metadata.exceptions import ProviderMultipleResultError, ProviderNoResultError, ProviderResultFound
+from anime_metadata.typeshed import AnimeTitle, ApiResponseData, StaffList
 
 ANIDB_LINK_REMOVER = re.compile(r"https?://(www\.)?anidb\.net/[^\s]+\s\[([^\]]+)\]")
 
