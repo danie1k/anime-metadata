@@ -1,3 +1,4 @@
+attrs
 beautifulsoup4
 click
 furl
@@ -7,3 +8,5 @@ peewee
 pip-tools
 psycopg2-binary
 python-dateutil
+requests
+typing-extensions
