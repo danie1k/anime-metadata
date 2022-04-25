@@ -23,9 +23,9 @@ from anime_metadata.typeshed import (
 
 from .typeshed import MALApiResponseData
 
-__all__ = (
+__all__ = [
     "MALProvider",
-)
+]
 
 
 MAL_DATA = {
@@ -76,11 +76,13 @@ class MALProvider(interfaces.BaseProvider):
 
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         url = furl("https://myanimelist.net/search/prefix.json")
-        url.set({
-            "keyword": title,
-            "type": "anime",
-            "v": 1,
-        })
+        url.set(
+            {
+                "keyword": title,
+                "type": "anime",
+                "v": 1,
+            }
+        )
 
         response = self.get_request(
             url,
@@ -127,7 +129,7 @@ class MALProvider(interfaces.BaseProvider):
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
                     furl(f"https://myanimelist.net/anime/{anime_id}/_/characters"),
-                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}"}
+                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}"},
                 )
                 cache.set(raw_html_page)
 
@@ -140,7 +142,7 @@ class MALProvider(interfaces.BaseProvider):
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
                     furl(f"https://myanimelist.net/anime/{anime_id}/_/episode/{episode_no}"),
-                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}/episode"}
+                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}/episode"},
                 )
                 cache.set(raw_html_page)
 
@@ -153,7 +155,7 @@ class MALProvider(interfaces.BaseProvider):
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
                     furl(f"https://myanimelist.net/anime/{anime_id}/_/episode"),
-                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}/episode"}
+                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}/episode"},
                 )
                 cache.set(raw_html_page)
 
@@ -186,7 +188,7 @@ class MALProvider(interfaces.BaseProvider):
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
                     furl(f"https://myanimelist.net/anime/{anime_id}/_/characters"),
-                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}"}
+                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}"},
                 )
                 cache.set(raw_html_page)
 
@@ -252,7 +254,7 @@ def _raw_data_to_dto(
         staff=dtos.ShowStaff(
             director=utils.collect_staff(staff_list, "direction", "director"),
             music=utils.collect_staff(staff_list, "music"),
-            screenwriter=utils.collect_staff(staff_list, "composition", "script")
+            screenwriter=utils.collect_staff(staff_list, "composition", "script"),
         ),
         # STUDIOS
         studios=api_data_parser.get_studios(),
@@ -278,6 +280,7 @@ class MALApi:
         return _main_picture.get("large", _main_picture.get("medium"))
 
     def get_mpaa(self) -> enums.MPAA:
+        # fmt: off
         mal2mpaa = {
             "g":     enums.MPAA.G,      # All Ages                    # noqa: E241
             "pg":    enums.MPAA.PG,     # Children                    # noqa: E241
@@ -286,6 +289,7 @@ class MALApi:
             "r+":    enums.MPAA.NC_17,  # Mild Nudity                 # noqa: E241
             "rx":    enums.MPAA.X,      # Hentai                      # noqa: E241
         }
+        # fmt: on
         return mal2mpaa.get(self.mal_api_data.get("rating", "").lower(), "G")
 
     def get_plot(self) -> str:
@@ -369,7 +373,8 @@ class MALWeb:
 
         _staff_h2: HtmlElement = the_page.xpath("//h2[contains(text(), 'Staff')][contains(@class, 'h2_overwrite')]")[0]
         _staff: List[HtmlElement] = _staff_h2.xpath("./ancestor::div[position()=1]")[0].xpath(
-            "./following-sibling::table")
+            "./following-sibling::table"
+        )
 
         result = collections.defaultdict(set)
 
@@ -420,9 +425,8 @@ class MALWeb:
 
         return {
             "synopsis": utils.normalize_string(
-                the_page.xpath("//h2[contains(text(), 'Synopsis')]/ancestor::*[position()=1]")[0]
-                .text_content()[8:]
-            ),
+                the_page.xpath("//h2[contains(text(), 'Synopsis')]/ancestor::*[position()=1]")[0].text_content()[8:]
+            )
         }
 
     def extract_episodes_from_html(self) -> Sequence[RawEpisode]:
@@ -454,7 +458,7 @@ class MALWeb:
 def raw_episodes_list_to_dtos(  # noqa: C901
     episodes_list: Sequence[RawEpisode],
     total_episodes: int,
-    anime_id: str
+    anime_id: str,
 ) -> Sequence[dtos.ShowEpisode]:
     if total_episodes == 0 or not episodes_list:
         return []
@@ -473,18 +477,20 @@ def raw_episodes_list_to_dtos(  # noqa: C901
         except KeyError:
             jp_titles = []
 
-        result.append(dtos.ShowEpisode(
-            no=i,
-            id=episode_id(anime_id, i),
-            plot=_episodes[i].get("plot", ""),
-            premiered=_episodes[i]["premiered"],
-            rating=None,
-            titles=dtos.ShowTitle(
-                en=_episodes[i]["title_en"],
-                jp_romanized=jp_titles[0].strip(" ()\xa0") if jp_titles else None,
-                jp_jp=jp_titles[1].strip(" ()\xa0") if len(jp_titles) == 2 else None
-            ),
-        ))
+        result.append(
+            dtos.ShowEpisode(
+                no=i,
+                id=episode_id(anime_id, i),
+                plot=_episodes[i].get("plot", ""),
+                premiered=_episodes[i]["premiered"],
+                rating=None,
+                titles=dtos.ShowTitle(
+                    en=_episodes[i]["title_en"],
+                    jp_romanized=jp_titles[0].strip(" ()\xa0") if jp_titles else None,
+                    jp_jp=jp_titles[1].strip(" ()\xa0") if len(jp_titles) == 2 else None,
+                ),
+            )
+        )
 
     if len(result) != total_episodes:
         raise NotImplementedError

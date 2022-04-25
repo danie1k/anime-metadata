@@ -58,8 +58,8 @@ def collect_staff(main_staff: StaffList, *needles: str) -> List[str]:
 
 
 def reverse_name_order(value: str) -> str:
-    value = value.replace(',', '')
-    return ' '.join(list(filter(bool, map(str.strip, value.split())))[::-1])
+    value = value.replace(",", "")
+    return " ".join(list(filter(bool, map(str.strip, value.split())))[::-1])
 
 
 def minimize_html(html: str) -> str:
@@ -83,20 +83,19 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
         return None
 
     result = (
-        value
-        .replace("`", "'")
+        value.replace("`", "'")
         .replace("’", "'")
-        .replace('“', '"')
-        .replace('”', '"')
-        .replace('…', '...')
-        .replace('—', '-')
+        .replace("“", '"')
+        .replace("”", '"')
+        .replace("…", "...")
+        .replace("—", "-")
         .replace('."', '".')
         .replace(',"', '",')
         .replace(';"', '";')
     )
 
-    result = re.sub(r' {2,}', ' ', result)
-    result = ANIDB_LINK_REMOVER.sub('\\2', result)
+    result = re.sub(r" {2,}", " ", result)
+    result = ANIDB_LINK_REMOVER.sub("\\2", result)
 
     # TODO: Remove:
     #  - Text containing: "(Source ...)"
@@ -107,11 +106,12 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
             return False
         return bool(value)
 
+    # fmt: off
     result = "\n".join(
         filter(
             _line_filter,
             (line.strip("*").strip() for line in result.splitlines()),
         )
     )
-
+    # fmt: on
     return result

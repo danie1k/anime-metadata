@@ -25,9 +25,9 @@ from anime_metadata.typeshed import (
 
 from .typeshed import DatRow
 
-__all__ = (
+__all__ = [
     "AniDBProvider",
-)
+]
 
 
 class Cache(interfaces.BaseCache):
@@ -82,13 +82,15 @@ class AniDBProvider(interfaces.BaseProvider):
             except CacheDataNotFound:
                 # https://wiki.anidb.net/HTTP_API_Definition
                 url = furl("http://api.anidb.net:9001/httpapi")
-                url.set({
-                    "aid": anime_id,
-                    "client": self.api_client_name,
-                    "clientver": self.api_client_version,
-                    "protover": 1,
-                    "request": "anime",
-                })
+                url.set(
+                    {
+                        "aid": anime_id,
+                        "client": self.api_client_name,
+                        "clientver": self.api_client_version,
+                        "protover": 1,
+                        "request": "anime",
+                    }
+                )
                 raw_xml_doc = self.get_request(url)
                 if raw_xml_doc.startswith(b"<error"):
                     raise requests.HTTPError(raw_xml_doc.decode("utf-8"))
@@ -108,7 +110,7 @@ class AniDBProvider(interfaces.BaseProvider):
                             "(KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
                         ),
                         "Referer": "https://anidb.net",
-                    }
+                    },
                 )
                 cache.set(raw_html_page)
 
@@ -151,7 +153,7 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
         # IMAGES
         images=dtos.ShowImage(
             base_url="https://cdn-eu.anidb.net/images/main/",
-            folder=xml_parser.get_picture()
+            folder=xml_parser.get_picture(),
         ),
         # MPAA
         mpaa=None,
@@ -165,7 +167,7 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
         staff=dtos.ShowStaff(
             director=utils.collect_staff(main_staff, "direction", "director"),
             music=utils.collect_staff(main_staff, "music"),
-            screenwriter=utils.collect_staff(main_staff, "composition")
+            screenwriter=utils.collect_staff(main_staff, "composition"),
         ),
         # STUDIOS
         studios=main_staff.get("Animation Work", []),
@@ -311,13 +313,13 @@ class AniDBXML:
 
         return {
             "en": utils.normalize_string(
-                results["en"].get("main", results["en"].get("official"))
+                results["en"].get("main", results["en"].get("official")),
             ),
             "jp_jp": utils.normalize_string(
-                results["ja"].get("main", results["ja"].get("official"))
+                results["ja"].get("main", results["ja"].get("official")),
             ),
             "jp_romanized": utils.normalize_string(
-                results["x-jat"].get("main", results["x-jat"].get("official"))
+                results["x-jat"].get("main", results["x-jat"].get("official")),
             ),
         }
 
@@ -354,11 +356,13 @@ class AniDBWeb:
         return int(the_page.xpath("//*[@itemprop='numberOfEpisodes']")[0].text.strip())
 
     def extract_source_material(self) -> enums.SourceMaterial:
+        # fmt: off
         result = [
             item["name"]
             for item in self._get_all_tags()
             if item["id"] in self.source_material_tags.keys()
         ]
+        # fmt: on
         if len(result) != 1:
             raise NotImplementedError
 
@@ -380,11 +384,13 @@ class AniDBWeb:
         raise NotImplementedError
 
     def extract_tags_from_html(self) -> Set[str]:
+        # fmt: off
         return {
             item["name"]
             for item in self._get_all_tags()
             if item["id"] not in self.source_material_tags.keys()
         }
+        # fmt: on
 
     def _get_all_tags(self) -> List[Dict[str, Union[int, str]]]:
         if not self.anime_page:
@@ -393,10 +399,12 @@ class AniDBWeb:
 
         result = []
         for item in the_page.xpath("//span[contains(@class, 'tagname')][@itemprop='genre']"):
-            result.append({
-                "id": int(item.xpath("./ancestor::a[position()=1]")[0].attrib["href"].split("/")[2]),
-                "name": item.text.strip(),
-            })
+            result.append(
+                {
+                    "id": int(item.xpath("./ancestor::a[position()=1]")[0].attrib["href"].split("/")[2]),
+                    "name": item.text.strip(),
+                }
+            )
 
         return result
 
@@ -421,19 +429,21 @@ def raw_episodes_list_to_dtos(  # noqa: C901
     result = []
 
     for ep_data in episodes_list[_type]:
-        result.append(dtos.ShowEpisode(
-            id=ep_data["id"],
-            no=ep_data["no"],
-            plot=ep_data.get("plot"),
-            premiered=ep_data.get("premiered"),
-            rating=ep_data.get("rating"),
-            titles=dtos.ShowTitle(
-                en=ep_data.get("title_en"),
-                jp_jp=ep_data.get("title_jp_jp"),
-                jp_romanized=ep_data.get("title_jp_romanized"),
-            ),
-            type=_type,
-        ))
+        result.append(
+            dtos.ShowEpisode(
+                id=ep_data["id"],
+                no=ep_data["no"],
+                plot=ep_data.get("plot"),
+                premiered=ep_data.get("premiered"),
+                rating=ep_data.get("rating"),
+                titles=dtos.ShowTitle(
+                    en=ep_data.get("title_en"),
+                    jp_jp=ep_data.get("title_jp_jp"),
+                    jp_romanized=ep_data.get("title_jp_romanized"),
+                ),
+                type=_type,
+            )
+        )
 
     if len(result) != total_episodes:
         raise NotImplementedError

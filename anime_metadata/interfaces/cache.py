@@ -5,9 +5,9 @@ from anime_metadata import models
 from anime_metadata.exceptions import CacheDataNotFound
 from anime_metadata.typeshed import RawHtml
 
-__all__ = (
+__all__ = [
     "BaseCache",
-)
+]
 
 
 class BaseCache(ContextDecorator, AbstractContextManager):

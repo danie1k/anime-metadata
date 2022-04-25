@@ -36,10 +36,12 @@ def date_converter(value: Any) -> Union[datetime.date, None]:  # noqa: C901
 def genres_converter(value: Any) -> Sequence[str]:
     if not value:
         return []
-    return sorted(map(
-        utils.capitalize,
-        ["Anime", *(item for item in set(value))],
-    ))
+    return sorted(
+        map(
+            utils.capitalize,
+            ["Anime", *(item for item in set(value))],
+        )
+    )
 
 
 def rating_converter(value: Any) -> Union[Decimal, None]:

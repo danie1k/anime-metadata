@@ -7,9 +7,9 @@ from anime_metadata import enums
 
 from . import _utils, show
 
-__all__ = (
+__all__ = [
     "TvSeriesData",
-)
+]
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)

@@ -7,9 +7,9 @@ from anime_metadata import constants
 
 from .base import BaseModel
 
-__all__ = (
+__all__ = [
     "ProviderCache",
-)
+]
 
 
 class ProviderCache(BaseModel):
@@ -21,7 +21,7 @@ class ProviderCache(BaseModel):
 
     class Meta:
         table_name = "providers_cache"
-        primary_key = peewee.CompositeKey('id', 'provider', 'data_type')
+        primary_key = peewee.CompositeKey("id", "provider", "data_type")
 
     @classmethod
     def get(cls, provider: str, _id: str, _type: str) -> Union[bytes, None]:

@@ -7,9 +7,9 @@ from anime_metadata import dtos, interfaces, utils
 from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
 from anime_metadata.typeshed import AnimeTitle, ApiResponseData, TvShowId
 
-__all__ = (
+__all__ = [
     "TMDBProvider",
-)
+]
 
 
 class Cache(interfaces.BaseCache):
@@ -26,13 +26,15 @@ class TMDBProvider(interfaces.BaseProvider):
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         # https://developers.themoviedb.org/3/search/search-tv-shows
         url = furl("https://api.themoviedb.org/3/search/tv")
-        url.set({
-            "api_key": self.api_key,
-            "include_adult": "true",
-            "language": self.lang,
-            "page": 1,
-            "query": title,
-        })
+        url.set(
+            {
+                "api_key": self.api_key,
+                "include_adult": "true",
+                "language": self.lang,
+                "page": 1,
+                "query": title,
+            }
+        )
 
         if year:
             url.args["first_air_date_year"] = year
@@ -58,10 +60,12 @@ class TMDBProvider(interfaces.BaseProvider):
                 # https://developers.themoviedb.org/3/tv/get-tv-details
                 url = furl("https://api.themoviedb.org/3/tv")
                 url.path.add(show_id)
-                url.set({
-                    "api_key": self.api_key,
-                    "language": self.lang,
-                })
+                url.set(
+                    {
+                        "api_key": self.api_key,
+                        "language": self.lang,
+                    }
+                )
                 raw_stringified_json = self.get_request(url)
                 cache.set(raw_stringified_json)
 
@@ -106,10 +110,12 @@ def _json_data_to_dto(json_data: ApiResponseData) -> dtos.TvSeriesData:
             # TODO
         ),
         # STUDIOS
-        studios=set([
-            *(item["name"] for item in json_data.get("networks", [])),
-            *(item["name"] for item in json_data.get("production_companies", [])),
-        ]),
+        studios=set(
+            [
+                *(item["name"] for item in json_data.get("networks", [])),
+                *(item["name"] for item in json_data.get("production_companies", [])),
+            ]
+        ),
         # TITLES
         titles=dtos.ShowTitle(
             en=json_data.get("name"),

@@ -7,13 +7,12 @@ from anime_metadata import dtos
 from anime_metadata.exceptions import ProviderNoResultError, ValidationError
 from anime_metadata.typeshed import AnimeId, AnimeTitle
 
-__all__ = (
+__all__ = [
     "BaseProvider",
-)
+]
 
 
 class BaseProvider:
-
     def _get_series_by_id(self, anime_id: AnimeId) -> dtos.TvSeriesData:
         raise NotImplementedError
 
@@ -41,7 +40,7 @@ class BaseProvider:
                 continue
 
         raise ProviderNoResultError(
-            f'Cannot find {self.__class__.__name__} for en_title={en_title} / jp_title={jp_title}'
+            f"Cannot find {self.__class__.__name__} for en_title={en_title} / jp_title={jp_title}"
         )
 
     def get_request(self, url: furl, *args, **kwargs) -> bytes:

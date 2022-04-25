@@ -9,14 +9,14 @@ from anime_metadata.typeshed import AnimeTitle
 
 from . import _utils
 
-__all__ = (
+__all__ = [
     "ShowCharacter",
     "ShowDate",
     "ShowEpisode",
     "ShowImage",
     "ShowStaff",
     "ShowTitle",
-)
+]
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -57,7 +57,10 @@ class ShowImage:
                 object.__setattr__(
                     self,
                     attrib.name,
-                    _utils.image_url_factory(self._base_url, getattr(self, attrib.name)),
+                    _utils.image_url_factory(
+                        self._base_url,
+                        getattr(self, attrib.name),
+                    ),
                 )
 
 
