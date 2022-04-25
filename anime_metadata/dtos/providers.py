@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Union, Sequence
+from typing import Union, Sequence, Any, Optional
 
 import attr
 
@@ -13,6 +13,7 @@ __all__ = (
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ProviderData:
+    _raw: Optional[Any] = None
     characters: Sequence[show.ShowCharacter] = []
     dates: show.ShowDate
     genres: Sequence[str] = attr.ib(converter=_utils.genres_converter)

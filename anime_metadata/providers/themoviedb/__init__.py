@@ -73,6 +73,7 @@ def _json_data_to_dto(json_data: ApiResponseData) -> dtos.TvSeriesData:
         raise NotImplementedError("created_by")
 
     return dtos.TvSeriesData(
+        raw={"api": json_data},
         # ID
         id=json_data["id"],
         # CHARACTERS
