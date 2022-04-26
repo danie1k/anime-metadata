@@ -83,15 +83,11 @@ def _json_data_to_dto(json_data: ApiResponseDataDict) -> dtos.TvSeriesData:
         raw={"api": json_data},
         # ID
         id=json_data["id"],
-        # CHARACTERS
-        characters=[],
         # DATES
         dates=dtos.ShowDate(
             premiered=json_data.get("first_air_date"),
             ended=json_data.get("last_air_date"),
         ),
-        # EPISODES
-        episodes=[],
         # GENRES
         genres=set(item["name"] for item in json_data.get("genres", [])),
         # IMAGES
@@ -100,18 +96,10 @@ def _json_data_to_dto(json_data: ApiResponseDataDict) -> dtos.TvSeriesData:
             backdrop=json_data.get("backdrop_path"),
             folder=json_data.get("poster_path"),
         ),
-        # MPAA
-        mpaa=None,
         # PLOT
-        plot=json_data.get("overview", ""),
+        plot=json_data.get("overview"),
         # RATING
         rating=json_data.get("vote_average"),
-        # SOURCE MATERIAL
-        source_material=None,
-        # STAFF
-        staff=dtos.ShowStaff(
-            # TODO
-        ),
         # STUDIOS
         studios=set(
             [

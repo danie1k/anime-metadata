@@ -157,8 +157,6 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
             base_url="https://cdn-eu.anidb.net/images/main/",
             folder=xml_parser.get_picture(),
         ),
-        # MPAA
-        mpaa=None,
         # PLOT
         plot=xml_parser.get_plot(),
         # RATING
@@ -172,7 +170,7 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
             screenwriter=utils.collect_staff(main_staff, "composition"),
         ),
         # STUDIOS
-        studios=main_staff.get("Animation Work", []),
+        studios=main_staff.get("Animation Work"),
         # TITLES
         titles=dtos.ShowTitle(
             en=titles["en"],
