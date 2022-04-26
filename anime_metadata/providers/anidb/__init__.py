@@ -10,7 +10,7 @@ from lxml import html
 from lxml.html import HtmlElement
 import requests
 
-from anime_metadata import dtos, enums, interfaces, utils
+from anime_metadata import constants, dtos, enums, interfaces, utils
 from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
 from anime_metadata.typeshed import (
     AnimeId,
@@ -107,10 +107,7 @@ class AniDBProvider(interfaces.BaseProvider):
                 raw_html_page = self.get_request(
                     furl(f"https://anidb.net/anime/{anime_id}"),
                     headers={
-                        "User-Agent": (
-                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                            "(KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
-                        ),
+                        "User-Agent": constants.USER_AGENT,
                         "Referer": "https://anidb.net",
                     },
                 )
