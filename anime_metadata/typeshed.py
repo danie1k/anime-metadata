@@ -1,6 +1,6 @@
-from typing import Any, Dict, NamedTuple, OrderedDict, Set, Union
+from typing import Any, Dict, NamedTuple, Set, Union
 
-from typing_extensions import TypedDict
+from typing_extensions import OrderedDict, TypedDict
 
 AnimeId = Union[int, str]
 AnimeTitle = str
@@ -16,9 +16,11 @@ EpisodeId = Union[int, str]
 EpisodeNumber = int
 EpisodeTitle = str
 
-ApiResponseData = Union[Dict[str, Any], NamedTuple]
+ApiResponseDataDict = Dict[str, Any]
+ApiResponseDataObj = NamedTuple
+ApiResponseData = Union[ApiResponseDataDict, ApiResponseDataObj]
 
-CharacterList = OrderedDict[CharacterName, CharacterId]
+CharacterList = OrderedDict[CharacterName, PersonName]
 StaffList = Dict[PositionName, Set[PersonName]]
 
 RawHtml = bytes

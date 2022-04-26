@@ -3,3 +3,7 @@ black-configparser
 flake8
 flake8-isort
 isort
+
+mypy
+types-python-dateutil
+types-requests

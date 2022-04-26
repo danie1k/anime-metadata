@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from furl import furl
 import requests
@@ -43,7 +43,7 @@ class BaseProvider:
             f"Cannot find {self.__class__.__name__} for en_title={en_title} / jp_title={jp_title}"
         )
 
-    def get_request(self, url: furl, *args, **kwargs) -> bytes:
+    def get_request(self, url: furl, *args: Any, **kwargs: Any) -> bytes:
         response = requests.get(url.tostr(), *args, **kwargs)
         response.raise_for_status()
         return response.content

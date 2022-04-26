@@ -76,8 +76,7 @@ def minimize_html(html: str) -> str:
 
 
 def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
-    if hasattr(value, "text"):
-        value = value.text
+    value = getattr(getattr, "text", value)
     value = None if value is None else value.strip()
     if not value:
         return None

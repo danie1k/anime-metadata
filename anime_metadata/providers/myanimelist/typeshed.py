@@ -5,7 +5,7 @@ from typing_extensions import TypedDict
 from anime_metadata.typeshed import AnimeId, AnimeTitle, Iso8601DateStr, Iso8601DateTimeStr
 
 
-class MALApiResponseData(TypedDict):
+class MALApiResponse(TypedDict):
     alternative_titles: Dict[str, Union[AnimeTitle, List[AnimeTitle]]]
     average_episode_duration: int
     background: str

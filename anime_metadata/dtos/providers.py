@@ -4,6 +4,7 @@ from typing import Any, Optional, Sequence, Union
 import attr
 
 from anime_metadata import enums
+from anime_metadata.typeshed import AnimeId
 
 from . import _utils, show
 
@@ -18,7 +19,7 @@ class ProviderData:
     characters: Sequence[show.ShowCharacter] = []
     dates: show.ShowDate
     genres: Sequence[str] = attr.ib(converter=_utils.genres_converter)
-    id: str
+    id: AnimeId
     images: show.ShowImage
     mpaa: Union[enums.MPAA, None]
     plot: str

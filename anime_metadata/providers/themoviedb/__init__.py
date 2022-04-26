@@ -1,11 +1,11 @@
 import json
-from typing import Optional
+from typing import Optional, cast
 
 from furl import furl
 
 from anime_metadata import dtos, interfaces, utils
 from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
-from anime_metadata.typeshed import AnimeTitle, ApiResponseData, TvShowId
+from anime_metadata.typeshed import AnimeTitle, ApiResponseDataDict, TvShowId
 
 __all__ = [
     "TMDBProvider",
@@ -40,17 +40,20 @@ class TMDBProvider(interfaces.BaseProvider):
             url.args["first_air_date_year"] = year
 
         response = self.get_request(url)
-        json_data: ApiResponseData = json.loads(response)
+        json_data: ApiResponseDataDict = json.loads(response)
 
         try:
             utils.find_title_in_provider_results(
                 title=title,
                 data=json_data.get("results", []),
-                data_item_title_getter=lambda item: item["name"],
+                data_item_title_getter=lambda item: cast(ApiResponseDataDict, item)["name"],
                 title_similarity_factor=self.title_similarity_factor,
             )
         except ProviderResultFound as exc:
-            return self._get_series_by_id(str(exc.data_item["id"]))
+            data_item: ApiResponseDataDict = exc.data_item  # type:ignore
+            return self._get_series_by_id(data_item["id"])
+
+        raise NotImplementedError
 
     def _get_series_by_id(self, show_id: TvShowId) -> dtos.TvSeriesData:
         with Cache("apiv3,tv", show_id) as cache:
@@ -72,7 +75,7 @@ class TMDBProvider(interfaces.BaseProvider):
         return _json_data_to_dto(json.loads(raw_stringified_json))
 
 
-def _json_data_to_dto(json_data: ApiResponseData) -> dtos.TvSeriesData:
+def _json_data_to_dto(json_data: ApiResponseDataDict) -> dtos.TvSeriesData:
     if json_data.get("created_by"):
         raise NotImplementedError("created_by")
 

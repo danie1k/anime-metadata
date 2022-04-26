@@ -2,8 +2,8 @@ import enum
 
 
 class CharacterType(enum.Enum):
-    MAIN = enum.auto
-    SUPPORTING = enum.auto
+    MAIN = enum.auto()
+    SUPPORTING = enum.auto()
 
 
 class EpisodeType(enum.Enum):

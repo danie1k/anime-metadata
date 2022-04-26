@@ -1,11 +1,11 @@
 import datetime
 from decimal import Decimal
-from typing import List, Union
+from typing import Any, List, Union  # noqa: F401
 
 import attr
 
 from anime_metadata import enums
-from anime_metadata.typeshed import AnimeTitle
+from anime_metadata.typeshed import AnimeTitle, EpisodeId
 
 from . import _utils
 
@@ -82,8 +82,10 @@ class ShowEpisode:
     no: int
     type: enums.EpisodeType = enums.EpisodeType.REGULAR
 
-    id: str
+    id: EpisodeId
     plot: str
     premiered: Union[datetime.date, None] = attr.ib(converter=_utils.date_converter)
-    rating: Union[Decimal, None] = attr.ib(converter=attr.converters.optional(lambda value: Decimal(str(value))))
+    rating: Union[Decimal, None] = attr.ib(
+        converter=attr.converters.optional(lambda value: Decimal(str(value)))  # type:ignore
+    )
     titles: ShowTitle

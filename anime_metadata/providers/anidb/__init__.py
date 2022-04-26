@@ -67,6 +67,8 @@ class AniDBProvider(interfaces.BaseProvider):
         except ProviderResultFound as exc:
             return self._get_series_by_id(cast(DatRow, exc.data_item).aid)
 
+        raise NotImplementedError
+
     def _get_series_by_id(self, anime_id: AnimeId) -> dtos.TvSeriesData:
         return _raw_data_to_dto(
             self._get_anime_from_api(anime_id),
@@ -215,10 +217,7 @@ class AniDBXML:
         return result.text.strip()
 
     def get_episodes(self) -> Dict[enums.EpisodeType, Sequence[RawEpisode]]:  # noqa: C901
-        result = {
-            enums.EpisodeType.REGULAR: [],
-            enums.EpisodeType.SPECIAL: [],
-        }
+        result_regular = result_special = []
 
         for item in self.xml_root.findall("./episodes/episode"):
             _epno = item.find("./epno")
@@ -228,12 +227,12 @@ class AniDBXML:
             if _type not in (1, 2):
                 continue
 
-            no = int(re.search(r"(\d+)", _epno.text).group(1))
+            no = int(re.search(r"(\d+)", _epno.text).group(1))  # type:ignore
             if not no:
                 continue
 
             ep: RawEpisode = {
-                "id": item.attrib.get("id"),  # type:ignore
+                "id": item.attrib.get("id"),
                 "no": no,
             }
 
@@ -258,17 +257,13 @@ class AniDBXML:
                 ep["title_jp_romanized"] = titles["jp_romanized"]
 
             if _type == 1:
-                result[enums.EpisodeType.REGULAR].append(ep)
+                result_regular.append(ep)
             elif _type == 2:
-                result[enums.EpisodeType.SPECIAL].append(ep)
+                result_special.append(ep)
 
         return {
-            enums.EpisodeType.REGULAR: sorted(
-                result[enums.EpisodeType.REGULAR], key=lambda item: (int(item["no"]), item.get("airdate"))
-            ),
-            enums.EpisodeType.SPECIAL: sorted(
-                result[enums.EpisodeType.SPECIAL], key=lambda item: (int(item["no"]), item.get("airdate"))
-            ),
+            enums.EpisodeType.REGULAR: sorted(result_regular, key=lambda item: (int(item["no"]), item.get("airdate"))),
+            enums.EpisodeType.SPECIAL: sorted(result_special, key=lambda item: (int(item["no"]), item.get("airdate"))),
         }
 
     def get_id(self) -> AnimeId:
@@ -294,7 +289,7 @@ class AniDBXML:
     def get_titles(self, elem: ET.Element = None) -> Dict[str, AnimeTitle]:
         elem = elem or self.xml_root.find("./titles")
 
-        results = {
+        results: Dict[str, Dict[str, AnimeTitle]] = {
             "en": {},
             "x-jat": {},
             "ja": {},
@@ -366,7 +361,7 @@ class AniDBWeb:
         if len(result) != 1:
             raise NotImplementedError
 
-        _source = result[0].lower()
+        _source = str(result[0]).lower()
 
         if "manga" in _source or _source in ["manhua", "manhwa"]:
             return enums.SourceMaterial.MANGA
@@ -386,7 +381,7 @@ class AniDBWeb:
     def extract_tags_from_html(self) -> Set[str]:
         # fmt: off
         return {
-            item["name"]
+            cast(str, item["name"])
             for item in self._get_all_tags()
             if item["id"] not in self.source_material_tags.keys()
         }

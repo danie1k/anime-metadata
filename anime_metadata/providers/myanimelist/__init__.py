@@ -1,18 +1,19 @@
 import collections
 import json
-from typing import Dict, List, Optional, OrderedDict, Sequence, Set
+from typing import Dict, List, Optional, Sequence, Set, cast
 
 from bs4 import BeautifulSoup
 from furl import furl
 from lxml import html
 from lxml.html import HtmlElement
+from typing_extensions import OrderedDict
 
 from anime_metadata import dtos, enums, interfaces, utils
 from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
 from anime_metadata.typeshed import (
     AnimeId,
     AnimeTitle,
-    ApiResponseData,
+    ApiResponseDataDict,
     CharacterList,
     CharacterName,
     EpisodeNumber,
@@ -21,7 +22,7 @@ from anime_metadata.typeshed import (
     StaffList,
 )
 
-from .typeshed import MALApiResponseData
+from .typeshed import MALApiResponse
 
 __all__ = [
     "MALProvider",
@@ -91,17 +92,20 @@ class MALProvider(interfaces.BaseProvider):
                 "X-Requested-With": "XMLHttpRequest",
             },
         )
-        json_data: ApiResponseData = json.loads(response)
+        json_data: ApiResponseDataDict = json.loads(response)
 
         try:
             utils.find_title_in_provider_results(
                 title=title,
                 data=json_data["categories"][0]["items"],
-                data_item_title_getter=lambda item: item["name"],
+                data_item_title_getter=lambda item: cast(ApiResponseDataDict, item)["name"],
                 title_similarity_factor=self.title_similarity_factor,
             )
         except ProviderResultFound as exc:
-            return self._get_series_by_id(str(exc.data_item["id"]))
+            data_item: ApiResponseDataDict = exc.data_item  # type:ignore
+            return self._get_series_by_id(data_item["id"])
+
+        raise NotImplementedError
 
     def _get_series_by_id(self, anime_id: AnimeId) -> dtos.TvSeriesData:
         characters_list = self._get_anime_characters_from_web(anime_id)
@@ -135,7 +139,7 @@ class MALProvider(interfaces.BaseProvider):
 
         return MALWeb(anime_characters_page=raw_html_page).extract_anime_characters_from_html()
 
-    def _get_anime_episode_from_web(self, anime_id: AnimeId, episode_no: EpisodeNumber) -> ApiResponseData:
+    def _get_anime_episode_from_web(self, anime_id: AnimeId, episode_no: EpisodeNumber) -> ApiResponseDataDict:
         with Cache("web,anime,episode", episode_id(anime_id, episode_no)) as cache:
             try:
                 raw_html_page = cache.get()
@@ -165,7 +169,7 @@ class MALProvider(interfaces.BaseProvider):
             episode["plot"] = episode_details["synopsis"]
         return episodes
 
-    def _get_anime_from_api(self, anime_id: AnimeId) -> MALApiResponseData:
+    def _get_anime_from_api(self, anime_id: AnimeId) -> MALApiResponse:
         with Cache("apiv2,anime", anime_id) as cache:
             try:
                 raw_stringified_json = cache.get()
@@ -212,7 +216,7 @@ def _raw_data_to_dto(
     *,
     episodes_list: Sequence[RawEpisode],
     main_characters: OrderedDict[CharacterName, RawCharacter],
-    mal_api_data: MALApiResponseData,
+    mal_api_data: MALApiResponse,
     staff_list: StaffList,
     supporting_characters: OrderedDict[CharacterName, RawCharacter],
 ) -> dtos.TvSeriesData:
@@ -268,12 +272,12 @@ def _raw_data_to_dto(
 
 
 class MALApi:
-    def __init__(self, mal_api_data: MALApiResponseData) -> None:
+    def __init__(self, mal_api_data: MALApiResponse) -> None:
         self.mal_api_data = mal_api_data
         super().__init__()
 
     def get_genres(self) -> Set[str]:
-        return set(item["name"] for item in self.mal_api_data.get("genres", []))
+        return set(str(item["name"]) for item in self.mal_api_data.get("genres", []))
 
     def get_main_picture(self) -> Optional[str]:
         _main_picture = self.mal_api_data.get("main_picture", {})
@@ -290,7 +294,10 @@ class MALApi:
             "rx":    enums.MPAA.X,      # Hentai                      # noqa: E241
         }
         # fmt: on
-        return mal2mpaa.get(self.mal_api_data.get("rating", "").lower(), "G")
+        return mal2mpaa.get(
+            self.mal_api_data.get("rating", "").lower(),
+            enums.MPAA.G,
+        )
 
     def get_plot(self) -> str:
         return utils.normalize_string(self.mal_api_data.get("synopsis"))
@@ -313,13 +320,19 @@ class MALApi:
         return enums.SourceMaterial.OTHER
 
     def get_studios(self) -> Set[str]:
-        return set(item["name"] for item in self.mal_api_data.get("studios", []))
+        return set(str(item["name"]) for item in self.mal_api_data.get("studios", []))
 
     def get_title_en(self) -> AnimeTitle:
-        return self.mal_api_data["alternative_titles"]["en"].strip()
+        alternative_titles = self.mal_api_data["alternative_titles"]
+        if "en" in alternative_titles and isinstance(alternative_titles["en"], str):
+            return alternative_titles["en"].strip()
+        raise NotImplementedError
 
     def get_title_jp_jp(self) -> AnimeTitle:
-        return self.mal_api_data["alternative_titles"]["ja"].strip()
+        alternative_titles = self.mal_api_data["alternative_titles"]
+        if "en" in alternative_titles and isinstance(alternative_titles["ja"], str):
+            return alternative_titles["ja"].strip()
+        raise NotImplementedError
 
     def get_title_jp_romanized(self) -> AnimeTitle:
         return self.mal_api_data["title"].strip()
@@ -438,7 +451,7 @@ class MALWeb:
 
         _table: HtmlElement = the_page.xpath("//table[contains(@class, 'episode_list')][contains(@class, 'ascend')]")[0]
         for episode in _table.xpath("./tr[contains(@class, 'episode-list-data')]"):  # type: HtmlElement
-            ep = {
+            ep: RawEpisode = {
                 "no": int(episode.xpath("./td[contains(@class, 'episode-number')]")[0].text.strip()),
                 "title_en": episode.xpath("./td[contains(@class, 'episode-title')]/a")[0].text.strip(),
                 "premiered": episode.xpath("./td[contains(@class, 'episode-aired')]")[0].text.strip(),
@@ -458,7 +471,7 @@ class MALWeb:
 def raw_episodes_list_to_dtos(  # noqa: C901
     episodes_list: Sequence[RawEpisode],
     total_episodes: int,
-    anime_id: str,
+    anime_id: AnimeId,
 ) -> Sequence[dtos.ShowEpisode]:
     if total_episodes == 0 or not episodes_list:
         return []
