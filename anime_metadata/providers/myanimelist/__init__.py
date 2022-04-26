@@ -2,9 +2,7 @@ import collections
 import json
 from typing import Dict, List, Optional, Sequence, Set, cast
 
-from bs4 import BeautifulSoup
 from furl import furl
-from lxml import html
 from lxml.html import HtmlElement
 from typing_extensions import OrderedDict
 
@@ -351,7 +349,7 @@ class MALWeb:
     def extract_anime_characters_from_html(self) -> Dict[enums.CharacterType, CharacterList]:
         if not self.anime_characters_page:
             raise ValueError
-        the_page = self._load_html(self.anime_characters_page)
+        the_page = utils.load_html(self.anime_characters_page)
 
         main_characters = {}
         supporting_characters = {}
@@ -377,7 +375,7 @@ class MALWeb:
     def extract_anime_staff_from_html(self) -> StaffList:
         if not self.anime_characters_page:
             raise ValueError
-        the_page = self._load_html(self.anime_characters_page)
+        the_page = utils.load_html(self.anime_characters_page)
 
         _staff_h2: HtmlElement = the_page.xpath("//h2[contains(text(), 'Staff')][contains(@class, 'h2_overwrite')]")[0]
         _staff: List[HtmlElement] = _staff_h2.xpath("./ancestor::div[position()=1]")[0].xpath(
@@ -402,7 +400,7 @@ class MALWeb:
     def extract_character_from_html(self) -> RawCharacter:
         if not self.character_page:
             raise ValueError
-        the_page = self._load_html(self.character_page)
+        the_page = utils.load_html(self.character_page)
 
         _content: HtmlElement = the_page.xpath("//*[@id='content']")[0]
         _name_en: HtmlElement = _content.xpath("//h2[contains(@class, 'normal_header')]")[0]
@@ -429,7 +427,7 @@ class MALWeb:
     def extract_episode_from_html(self) -> Dict[str, str]:
         if not self.episode_page:
             raise ValueError
-        the_page = self._load_html(self.episode_page)
+        the_page = utils.load_html(self.episode_page)
 
         return {
             "synopsis": utils.normalize_string(
@@ -440,7 +438,7 @@ class MALWeb:
     def extract_episodes_from_html(self) -> Sequence[RawEpisode]:
         if not self.anime_episodes_page:
             raise ValueError
-        the_page = self._load_html(self.anime_episodes_page)
+        the_page = utils.load_html(self.anime_episodes_page)
 
         result = []
 
@@ -458,9 +456,6 @@ class MALWeb:
             result.append(ep)
 
         return result
-
-    def _load_html(self, data: bytes) -> HtmlElement:
-        return html.fromstring(str(BeautifulSoup(utils.minimize_html(data.decode("utf-8")), "html.parser")))
 
 
 def raw_episodes_list_to_dtos(  # noqa: C901

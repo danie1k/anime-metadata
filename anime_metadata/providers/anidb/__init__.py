@@ -4,10 +4,7 @@ import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Union, cast
 import xml.etree.ElementTree as ET
 
-from bs4 import BeautifulSoup
 from furl import furl
-from lxml import html
-from lxml.html import HtmlElement
 import requests
 
 from anime_metadata import constants, dtos, enums, interfaces, utils
@@ -329,7 +326,7 @@ class AniDBWeb:
     def extract_episodes_count(self) -> int:
         if not self.anime_page:
             raise ValueError
-        the_page = self._load_html(self.anime_page)
+        the_page = utils.load_html(self.anime_page)
 
         return int(the_page.xpath("//*[@itemprop='numberOfEpisodes']")[0].text.strip())
 
@@ -373,7 +370,7 @@ class AniDBWeb:
     def _get_all_tags(self) -> List[Dict[str, Union[int, str]]]:
         if not self.anime_page:
             raise ValueError
-        the_page = self._load_html(self.anime_page)
+        the_page = utils.load_html(self.anime_page)
 
         result = []
         for item in the_page.xpath("//span[contains(@class, 'tagname')][@itemprop='genre']"):
@@ -385,9 +382,6 @@ class AniDBWeb:
             )
 
         return result
-
-    def _load_html(self, data: bytes) -> HtmlElement:
-        return html.fromstring(str(BeautifulSoup(utils.minimize_html(data.decode("utf-8")), "html.parser")))
 
 
 def raw_episodes_list_to_dtos(  # noqa: C901

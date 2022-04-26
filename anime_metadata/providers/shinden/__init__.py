@@ -97,7 +97,7 @@ class ShindenWeb:
     def extract_series_data(self) -> dtos.TvSeriesData:
         if not self.series_page:
             raise ValueError
-        the_page = self._load_html(self.series_page)
+        the_page = utils.load_html(self.series_page)
 
         basic_information = self._extract_show_basic_information(the_page)
         tags = self._extract_show_tags(the_page)
@@ -213,7 +213,7 @@ class ShindenWeb:
     def extract_search_results(self) -> Dict[str, Union[None, str, List[SearchResult]]]:  # noqa: C901
         if not self.search_result_page:
             raise ValueError
-        the_page = self._load_html(self.search_result_page)
+        the_page = utils.load_html(self.search_result_page)
 
         result = []
         for item in the_page.xpath("//*[normalize-space(@class)='title-table']//ul[normalize-space(@class)='div-row']"):
@@ -260,6 +260,3 @@ class ShindenWeb:
             pass
 
         return {"items": result, "_prev_page": _prev_page, "_next_page": _next_page}
-
-    def _load_html(self, data: bytes) -> HtmlElement:
-        return html.fromstring(str(BeautifulSoup(utils.minimize_html(data.decode("utf-8")), "html.parser")))

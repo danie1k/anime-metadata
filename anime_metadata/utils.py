@@ -3,6 +3,8 @@ import re
 from typing import Callable, Iterable, List, Union
 import xml.etree.ElementTree as ET
 
+from bs4 import BeautifulSoup
+from lxml import html
 from rapidfuzz.distance import Indel
 
 from anime_metadata.exceptions import ProviderMultipleResultError, ProviderNoResultError, ProviderResultFound
@@ -75,6 +77,10 @@ def minimize_html(html: str) -> str:
     html = re.sub(r"[\s]+<", "<", html)  # remove whitespaces before opening tags
     html = re.sub(r">[\s]+", ">", html)  # remove whitespaces after closing tags
     return html
+
+
+def load_html(raw_data: bytes) -> html.HtmlElement:
+    return html.fromstring(str(BeautifulSoup(minimize_html(raw_data.decode("utf-8")), "html.parser")))
 
 
 def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
