@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional, Sequence, Union, cast
+from typing import Any, List, Optional, Sequence, Union, cast
 
 from furl import furl
 
@@ -19,13 +19,9 @@ class Cache(interfaces.BaseCache):
 
 
 class FanartProvider(interfaces.BaseProvider):
-    def __init__(
-        self, api_key: str, preferred_lang: Sequence[str] = None, title_similarity_factor: float = 0.9
-    ) -> None:
-        self.api_key = api_key
+    def __init__(self, preferred_lang: Sequence[str] = None, *args: Any, **kwargs: Any) -> None:
         self.preferred_lang = preferred_lang or ["en", "jp", ""]
-        self.title_similarity_factor = title_similarity_factor
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         url = furl("https://fanart.tv/api/search.php")

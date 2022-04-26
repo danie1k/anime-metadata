@@ -70,11 +70,6 @@ class Cache(interfaces.BaseCache):
 
 
 class MALProvider(interfaces.BaseProvider):
-    def __init__(self, api_key: str, title_similarity_factor: float = 0.9) -> None:
-        self.api_key = api_key
-        self.title_similarity_factor = title_similarity_factor
-        super().__init__()
-
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         url = furl("https://myanimelist.net/search/prefix.json")
         url.set(

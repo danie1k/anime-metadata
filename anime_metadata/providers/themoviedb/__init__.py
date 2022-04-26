@@ -1,5 +1,5 @@
 import json
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 from furl import furl
 
@@ -17,11 +17,9 @@ class Cache(interfaces.BaseCache):
 
 
 class TMDBProvider(interfaces.BaseProvider):
-    def __init__(self, api_key: str, lang: str = "en-US", title_similarity_factor: float = 0.9) -> None:
-        self.api_key = api_key
+    def __init__(self, lang: str = "en-US", *args: Any, **kwargs: Any) -> None:
         self.lang = lang
-        self.title_similarity_factor = title_similarity_factor
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         # https://developers.themoviedb.org/3/search/search-tv-shows

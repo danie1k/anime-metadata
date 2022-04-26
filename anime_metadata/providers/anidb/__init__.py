@@ -1,7 +1,7 @@
 from collections import OrderedDict, defaultdict
 from pathlib import Path
 import re
-from typing import Dict, List, Optional, Sequence, Set, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Set, Union, cast
 import xml.etree.ElementTree as ET
 
 from bs4 import BeautifulSoup
@@ -34,27 +34,15 @@ class Cache(interfaces.BaseCache):
     provider_name = "anidb"
 
 
-# TODO: Add web scraping
-
-
 class AniDBProvider(interfaces.BaseProvider):
-    def __init__(
-        self,
-        api_client_name: str,
-        api_client_version: int,
-        anime_titles_file: Path,
-        title_similarity_factor: float = 0.9,
-    ) -> None:
-        self.api_client_name = api_client_name
-        self.api_client_version = api_client_version
+    def __init__(self, anime_titles_file: Path, *args: Any, **kwargs: Any) -> None:
         # https://wiki.anidb.net/API#Anime_Titles
         self.anime_titles_db = tuple(
             DatRow(*dbitem.split("|", 3))
             for dbitem in anime_titles_file.read_text().splitlines()
             if not dbitem.startswith("#")
         )
-        self.title_similarity_factor = title_similarity_factor
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
         try:
@@ -87,8 +75,8 @@ class AniDBProvider(interfaces.BaseProvider):
                 url.set(
                     {
                         "aid": anime_id,
-                        "client": self.api_client_name,
-                        "clientver": self.api_client_version,
+                        "client": self.api_key.split("|")[0],
+                        "clientver": self.api_key.split("|")[1],
                         "protover": 1,
                         "request": "anime",
                     }
