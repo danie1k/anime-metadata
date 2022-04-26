@@ -46,7 +46,7 @@ class FanartProvider(interfaces.BaseProvider):
         try:
             utils.find_title_in_provider_results(
                 title=title,
-                data=(item for item in json_data if int(item["image_count"]) > 0),
+                data=(item for item in json_data if int(item["image_count"]) > 0),  # type:ignore
                 data_item_title_getter=lambda item: cast(SearchResultItem, item)["title"],
                 title_similarity_factor=self.title_similarity_factor,
             )

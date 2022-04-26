@@ -1,5 +1,6 @@
+from collections.abc import Generator, Iterator
 import re
-from typing import Callable, List, Sequence, Union
+from typing import Callable, Iterable, List, Union
 import xml.etree.ElementTree as ET
 
 from rapidfuzz.distance import Indel
@@ -12,15 +13,16 @@ ANIDB_LINK_REMOVER = re.compile(r"https?://(www\.)?anidb\.net/[^\s]+\s\[([^\]]+)
 
 def find_title_in_provider_results(  # noqa: C901
     title: AnimeTitle,
-    data: Sequence[ApiResponseData],
+    data: Iterable[ApiResponseData],
     data_item_title_getter: Callable[[ApiResponseData], AnimeTitle],
     title_similarity_factor: float,
 ) -> None:
-    if len(data) == 0:
-        raise ProviderNoResultError
+    if not isinstance(data, (Generator, Iterator)):
+        if len(data) == 0:  # type:ignore
+            raise ProviderNoResultError
 
-    if len(data) == 1:
-        raise ProviderResultFound(data[0])
+        if len(data) == 1:  # type:ignore
+            raise ProviderResultFound(data[0])  # type:ignore
 
     results = []
 
