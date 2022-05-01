@@ -26,6 +26,9 @@ __all__ = [
     "AniDBProvider",
 ]
 
+BASE_API_URL = "http://api.anidb.net:9001"
+BASE_WEB_URL = "https://anidb.net"
+
 LANG = {
     "en": enums.Language.ENGLISH,
     "ja": enums.Language.JAPANESE,
@@ -74,17 +77,19 @@ class AniDBProvider(interfaces.BaseProvider):
                 raw_xml_doc = cache.get()
             except CacheDataNotFound:
                 # https://wiki.anidb.net/HTTP_API_Definition
-                url = furl("http://api.anidb.net:9001/httpapi")
-                url.set(
-                    {
-                        "aid": anime_id,
-                        "client": self.api_key.split("|")[0],
-                        "clientver": self.api_key.split("|")[1],
-                        "protover": 1,
-                        "request": "anime",
-                    }
+                raw_xml_doc = self.get_request(
+                    furl(
+                        BASE_API_URL,
+                        path=["httpapi"],
+                        args={
+                            "aid": anime_id,
+                            "client": self.api_key.split("|")[0],
+                            "clientver": self.api_key.split("|")[1],
+                            "protover": 1,
+                            "request": "anime",
+                        },
+                    ),
                 )
-                raw_xml_doc = self.get_request(url)
                 if raw_xml_doc.startswith(b"<error"):
                     raise requests.HTTPError(raw_xml_doc.decode("utf-8"))
 
@@ -96,10 +101,13 @@ class AniDBProvider(interfaces.BaseProvider):
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(f"https://anidb.net/anime/{anime_id}"),
+                    furl(
+                        BASE_WEB_URL,
+                        path=["anime", anime_id],
+                    ),
                     headers={
                         "User-Agent": constants.USER_AGENT,
-                        "Referer": "https://anidb.net",
+                        "Referer": BASE_WEB_URL,
                     },
                 )
                 cache.set(raw_html_page)

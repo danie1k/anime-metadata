@@ -1,6 +1,6 @@
 import collections
 import json
-from typing import Dict, List, Optional, Sequence, Set, cast
+from typing import Dict, List, Optional, Sequence, Set, Union, cast
 
 import babelfish
 from furl import furl
@@ -27,6 +27,8 @@ __all__ = [
     "MALProvider",
 ]
 
+BASE_API_URL = "https://api.myanimelist.net"
+BASE_WEB_URL = "https://myanimelist.net"
 
 MAL_DATA = {
     "alternative_titles",
@@ -70,19 +72,14 @@ class Cache(interfaces.BaseCache):
 
 class MALProvider(interfaces.BaseProvider):
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
-        url = furl("https://myanimelist.net/search/prefix.json")
-        url.set(
-            {
-                "keyword": title,
-                "type": "anime",
-                "v": 1,
-            }
-        )
-
         response = self.get_request(
-            url,
+            furl(
+                BASE_WEB_URL,
+                path=["search", "prefix.json"],
+                args={"keyword": title, "type": "anime", "v": 1},
+            ),
             headers={
-                "Referer": "https://myanimelist.net/",
+                "Referer": BASE_WEB_URL,
                 "X-Requested-With": "XMLHttpRequest",
             },
         )
@@ -126,8 +123,13 @@ class MALProvider(interfaces.BaseProvider):
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(f"https://myanimelist.net/anime/{anime_id}/_/characters"),
-                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}"},
+                    furl(
+                        BASE_WEB_URL,
+                        path=["anime", anime_id, "_", "characters"],
+                    ),
+                    headers={
+                        "Referer": furl(BASE_WEB_URL, path=["anime", anime_id]).tostr(),
+                    },
                 )
                 cache.set(raw_html_page)
 
@@ -139,8 +141,13 @@ class MALProvider(interfaces.BaseProvider):
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(f"https://myanimelist.net/anime/{anime_id}/_/episode/{episode_no}"),
-                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}/episode"},
+                    furl(
+                        BASE_WEB_URL,
+                        path=["anime", anime_id, "_", "episode", episode_no],
+                    ),
+                    headers={
+                        "Referer": furl(BASE_WEB_URL, path=["anime", anime_id, "episode"]).tostr(),
+                    },
                 )
                 cache.set(raw_html_page)
 
@@ -152,8 +159,13 @@ class MALProvider(interfaces.BaseProvider):
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(f"https://myanimelist.net/anime/{anime_id}/_/episode"),
-                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}/episode"},
+                    furl(
+                        BASE_WEB_URL,
+                        path=["anime", anime_id, "_", "episode"],
+                    ),
+                    headers={
+                        "Referer": furl(BASE_WEB_URL, path=["anime", anime_id, "episode"]).tostr(),
+                    },
                 )
                 cache.set(raw_html_page)
 
@@ -169,11 +181,15 @@ class MALProvider(interfaces.BaseProvider):
                 raw_stringified_json = cache.get()
             except CacheDataNotFound:
                 # https://myanimelist.net/apiconfig/references/api/v2#operation/anime_anime_id_get
-                url = furl(f"https://api.myanimelist.net/v2/anime/{anime_id}")
-                url.set({"fields": ",".join(MAL_DATA)})
                 raw_stringified_json = self.get_request(
-                    url,
-                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    furl(
+                        BASE_API_URL,
+                        path=["v2", "anime", anime_id],
+                        args={"fields": ",".join(MAL_DATA)},
+                    ),
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                    },
                 )
                 cache.set(raw_stringified_json)
 
@@ -185,21 +201,31 @@ class MALProvider(interfaces.BaseProvider):
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(f"https://myanimelist.net/anime/{anime_id}/_/characters"),
-                    headers={"Referer": f"https://myanimelist.net/anime/{anime_id}"},
+                    furl(
+                        BASE_WEB_URL,
+                        path=["anime", anime_id, "_", "characters"],
+                    ),
+                    headers={
+                        "Referer": furl(BASE_WEB_URL, path=["anime", anime_id]).tostr(),
+                    },
                 )
                 cache.set(raw_html_page)
 
         return MALWeb(anime_characters_page=raw_html_page).extract_anime_staff_from_html()
 
-    def _get_character_from_web(self, anime_id: AnimeId) -> RawCharacter:
-        with Cache("web,character", anime_id) as cache:
+    def _get_character_from_web(self, character_id: Union[int, str]) -> RawCharacter:
+        with Cache("web,character", character_id) as cache:
             try:
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(f"https://myanimelist.net/character/{anime_id}"),
-                    headers={"Referer": "https://myanimelist.net/"},
+                    furl(
+                        BASE_WEB_URL,
+                        path=["character", character_id],
+                    ),
+                    headers={
+                        "Referer": BASE_WEB_URL,
+                    },
                 )
                 cache.set(raw_html_page)
 

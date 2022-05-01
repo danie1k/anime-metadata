@@ -16,6 +16,7 @@ __all__ = [
     "ShindenProvider",
 ]
 
+BASE_WEB_URL = "https://shinden.pl"
 MAX_SEARCH_PAGES = 5
 
 
@@ -44,10 +45,13 @@ class ShindenProvider(interfaces.BaseProvider):
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(f"https://shinden.pl/series/{anime_id}"),
+                    furl(
+                        BASE_WEB_URL,
+                        path=["series", anime_id],
+                    ),
                     headers={
                         "User-Agent": constants.USER_AGENT,
-                        "Referer": "https://shinden.pl",
+                        "Referer": BASE_WEB_URL,
                     },
                 )
                 cache.set(raw_html_page)
@@ -57,14 +61,21 @@ class ShindenProvider(interfaces.BaseProvider):
     # ------------------------------------------------------------------------------------------------------------------
 
     def _search_shinden_with_pagination(self, title: AnimeTitle, year: int = None) -> Iterator[SearchResult]:
-        url = furl("https://shinden.pl/series")
-        url.set({"search": title, "type": "contains", "sort_by": "score", "sort_order": "asc"})
+        url = furl(
+            BASE_WEB_URL,
+            path=["series"],
+            args={
+                "search": title,
+                "type": "contains",
+                "sort_by": "score",
+                "sort_order": "asc",
+            },
+        )
 
         if year:
             url.add({"start_date_precision": 1, "year_from": year})
 
-        referer = "https://shinden.pl"
-
+        referer = BASE_WEB_URL
         for _unused in range(MAX_SEARCH_PAGES):
             response = self.get_request(
                 url,
@@ -246,16 +257,16 @@ class ShindenWeb:
         _next_page = None
         try:
             _prev_page = furl(
-                "https://shinden.pl"
-                + the_page.xpath("//*[normalize-space(@class)='pagination-prev']//a")[0].attrib["href"]
+                BASE_WEB_URL,
+                path=the_page.xpath("//*[normalize-space(@class)='pagination-prev']//a")[0].attrib["href"],
             )
             _prev_page.remove(args=["r307"])
         except IndexError:
             pass
         try:
             _next_page = furl(
-                "https://shinden.pl"
-                + the_page.xpath("//*[normalize-space(@class)='pagination-next']//a")[0].attrib["href"]
+                BASE_WEB_URL,
+                path=the_page.xpath("//*[normalize-space(@class)='pagination-next']//a")[0].attrib["href"],
             )
             _next_page.remove(args=["r307"])
         except IndexError:

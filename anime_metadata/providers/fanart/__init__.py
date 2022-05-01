@@ -13,6 +13,9 @@ __all__ = [
     "FanartProvider",
 ]
 
+BASE_API_URL = "http://webservice.fanart.tv"
+BASE_WEB_URL = "https://fanart.tv"
+
 
 class Cache(interfaces.BaseCache):
     provider_name = "fanart"
@@ -25,19 +28,18 @@ class FanartProvider(interfaces.BaseProvider):
         super().__init__(*args, **kwargs)
 
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
-        url = furl("https://fanart.tv/api/search.php")
-        url.set(
-            {
-                "section": "tv",
-                "s": title,
-            }
-        )
-
         response = self.get_request(
-            url,
+            furl(
+                BASE_WEB_URL,
+                path=["api", "search.php"],
+                args={
+                    "section": "tv",
+                    "s": title,
+                },
+            ),
             headers={
                 "User-Agent": constants.USER_AGENT,
-                "Referer": "https://fanart.tv",
+                "Referer": BASE_WEB_URL,
                 "X-Requested-With": "XMLHttpRequest",
                 "Alt-Used": "fanart.tv",
             },
@@ -62,9 +64,13 @@ class FanartProvider(interfaces.BaseProvider):
                 raw_stringified_json = cache.get()
             except CacheDataNotFound:
                 # https://fanarttv.docs.apiary.io/#reference/tv/get-show/get-images-for-show
-                url = furl(f"http://webservice.fanart.tv/v3/tv/{anime_id}")
-                url.set({"api_key": self.api_key})
-                raw_stringified_json = self.get_request(url)
+                raw_stringified_json = self.get_request(
+                    furl(
+                        BASE_API_URL,
+                        path=["v3", "tv", anime_id],
+                        args={"api_key": self.api_key},
+                    ),
+                )
                 cache.set(raw_stringified_json)
 
         json_data: TvData = json.loads(raw_stringified_json)
