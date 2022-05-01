@@ -17,7 +17,7 @@ class Cache(interfaces.BaseCache):
 
 
 class TMDBProvider(interfaces.BaseProvider):
-    def __init__(self, lang: str = "en-US", *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, lang: str = "en-US", **kwargs: Any) -> None:
         self.lang = lang
         super().__init__(*args, **kwargs)
 

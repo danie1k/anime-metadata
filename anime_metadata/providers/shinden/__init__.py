@@ -190,7 +190,9 @@ class ShindenWeb:
         basic_information: List[HtmlElement] = the_page.xpath(
             "//*[normalize-space(@class)='title-small-info']//dl[normalize-space(@class)='info-aside-list']/dt"
         )
-        date_premiered = date_ended = mpaa = None
+        date_premiered = None
+        date_ended = None
+        mpaa = None
 
         for dt in basic_information:
             dd: HtmlElement = dt.xpath("./following-sibling::dd[1]")[0]
@@ -241,7 +243,8 @@ class ShindenWeb:
                 }
             )
 
-        _prev_page = _next_page = None
+        _prev_page = None
+        _next_page = None
         try:
             _prev_page = furl(
                 "https://shinden.pl"

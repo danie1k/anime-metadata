@@ -38,7 +38,7 @@ class Cache(interfaces.BaseCache):
 
 
 class AniDBProvider(interfaces.BaseProvider):
-    def __init__(self, anime_titles_file: Path, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, anime_titles_file: Path, **kwargs: Any) -> None:
         # https://wiki.anidb.net/API#Anime_Titles
         self.anime_titles_db = tuple(
             DatRow(*dbitem.split("|", 3))
@@ -198,7 +198,8 @@ class AniDBXML:
         return result.text.strip()
 
     def get_episodes(self) -> Dict[enums.EpisodeType, Sequence[RawEpisode]]:  # noqa: C901
-        result_regular = result_special = []
+        result_regular = []
+        result_special = []
 
         for item in self.xml_root.findall("./episodes/episode"):
             _epno = item.find("./epno")

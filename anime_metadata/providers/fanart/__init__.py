@@ -19,7 +19,7 @@ class Cache(interfaces.BaseCache):
 
 
 class FanartProvider(interfaces.BaseProvider):
-    def __init__(self, preferred_lang: Sequence[enums.Language] = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, preferred_lang: Sequence[enums.Language] = None, **kwargs: Any) -> None:
         preferred_lang = preferred_lang or [enums.Language.ENGLISH, enums.Language.JAPANESE, enums.Language.UNKNOWN]
         self.preferred_lang = [item.value for item in preferred_lang]
         super().__init__(*args, **kwargs)
