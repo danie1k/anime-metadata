@@ -222,6 +222,7 @@ def _raw_data_to_dto(
             characters.append(dtos.ShowCharacter(name=name, seiyuu=seiyuu))
 
     return dtos.TvSeriesData(
+        provider=MALProvider,
         raw={"api": mal_api_data},
         # ID
         id=mal_api_data["id"],

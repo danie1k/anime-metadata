@@ -116,6 +116,7 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
     main_staff = xml_parser.get_main_staff()
 
     return dtos.TvSeriesData(
+        provider=AniDBProvider,
         raw={"api": raw_xml_doc, "web": web_html_page},
         # ID
         id=xml_parser.get_id(),

@@ -70,7 +70,8 @@ class FanartProvider(interfaces.BaseProvider):
         json_data: TvData = json.loads(raw_stringified_json)
 
         return dtos.TvSeriesData(
-            raw=json_data,
+            provider=FanartProvider,
+            raw={"api": json_data},
             genres=None,
             id=anime_id,
             images=dtos.ShowImage(

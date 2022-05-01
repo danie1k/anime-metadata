@@ -15,7 +15,8 @@ __all__ = [
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ProviderData:
-    _raw: Optional[Any] = None
+    _provider: object
+    _raw: Optional[Dict[str, Any]] = None
     characters: Optional[Sequence[show.ShowCharacter]] = None
     dates: Optional[show.ShowDate] = None
     genres: Optional[Sequence[str]] = attr.ib(default=None, converter=_utils.genres_converter)

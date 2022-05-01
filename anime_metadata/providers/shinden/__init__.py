@@ -103,6 +103,8 @@ class ShindenWeb:
         tags = self._extract_show_tags(the_page)
 
         return dtos.TvSeriesData(
+            provider=ShindenProvider,
+            raw={"web": self.series_page},
             # TODO: characters=(),
             # DATES
             dates=basic_information["dates"],
