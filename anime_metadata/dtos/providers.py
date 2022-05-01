@@ -26,7 +26,7 @@ class ProviderData:
     rating: Optional[Decimal] = attr.ib(default=None, converter=_utils.rating_converter)
     source_material: Optional[enums.SourceMaterial] = None
     staff: Optional[show.ShowStaff] = None
-    studios: Optional[Sequence[str]] = attr.ib(default=None, converter=_utils.studios_converter)
+    studios: Optional[Sequence[str]] = attr.ib(default=None, converter=_utils.unique_list_converter)
     titles: Dict[enums.Language, AnimeTitle]
 
 

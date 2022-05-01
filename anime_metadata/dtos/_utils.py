@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Sequence, Union
+from typing import TYPE_CHECKING, Any, List, Sequence, Union
 
 import attr
 from dateutil.parser import ParserError, parse as dateutil_parse
@@ -39,7 +39,7 @@ def genres_converter(value: Any) -> Sequence[str]:
     return sorted(
         map(
             utils.capitalize,
-            ["Anime", *(item for item in set(value))],
+            unique_list_converter(["Anime", *(item for item in set(value))]),
         )
     )
 
@@ -48,10 +48,10 @@ def rating_converter(value: Any) -> Union[Decimal, None]:
     return attr.converters.optional(lambda value: Decimal(str(value)))(value)
 
 
-def studios_converter(value: Any) -> Sequence[str]:
+def unique_list_converter(value: Any) -> List[str]:
     if not value:
         return []
-    return sorted(set(value))
+    return list(set(value))
 
 
 # Factories

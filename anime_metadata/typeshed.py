@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any, Dict, NamedTuple, Set, Union
 
 import babelfish
@@ -30,6 +31,9 @@ RawHtml = bytes
 
 Iso8601DateStr = str
 Iso8601DateTimeStr = str
+
+Rating = Decimal
+URL = str
 
 
 class RawCharacter(TypedDict):

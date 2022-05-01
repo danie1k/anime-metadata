@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Union  # noqa: F401
 import attr
 
 from anime_metadata import enums
-from anime_metadata.typeshed import AnimeTitle, EpisodeId
+from anime_metadata.typeshed import URL, AnimeTitle, EpisodeId, Rating
 
 from . import _utils
 
@@ -42,11 +42,11 @@ class ShowDate:
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ShowImage:
     _base_url: Union[str, None] = None
-    backdrop: Union[str, None] = None
-    banner: Union[str, None] = None
-    folder: Union[str, None] = None
-    landscape: Union[str, None] = None
-    logo: Union[str, None] = None
+    backdrop: Union[URL, None] = None
+    banner: Union[URL, None] = None
+    folder: Union[URL, None] = None
+    landscape: Union[URL, None] = None
+    logo: Union[URL, None] = None
 
     def __attrs_post_init__(self) -> None:
         if not self._base_url:
@@ -71,7 +71,7 @@ class ShowEpisode:
     id: EpisodeId
     plot: str
     premiered: Union[datetime.date, None] = attr.ib(converter=_utils.date_converter)
-    rating: Union[Decimal, None] = attr.ib(
+    rating: Union[Rating, None] = attr.ib(
         converter=attr.converters.optional(lambda value: Decimal(str(value)))  # type:ignore
     )
     titles: Dict[enums.Language, AnimeTitle]
