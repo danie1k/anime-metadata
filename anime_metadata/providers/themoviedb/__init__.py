@@ -3,7 +3,7 @@ from typing import Any, Optional, cast
 
 from furl import furl
 
-from anime_metadata import dtos, interfaces, utils
+from anime_metadata import dtos, enums, interfaces, utils
 from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
 from anime_metadata.typeshed import AnimeTitle, ApiResponseDataDict, TvShowId
 
@@ -106,8 +106,8 @@ def _json_data_to_dto(json_data: ApiResponseDataDict) -> dtos.TvSeriesData:
             ]
         ),
         # TITLES
-        titles=dtos.ShowTitle(
-            en=json_data.get("name"),
-            jp_jp=json_data.get("original_name"),
-        ),
+        titles={
+            enums.Language.ENGLISH: json_data.get("name"),
+            enums.Language.JAPANESE: json_data.get("original_name"),
+        },
     )

@@ -26,6 +26,12 @@ __all__ = [
     "AniDBProvider",
 ]
 
+LANG = {
+    "en": enums.Language.ENGLISH,
+    "ja": enums.Language.JAPANESE,
+    "x-jat": enums.Language.ROMAJI,
+}
+
 
 class Cache(interfaces.BaseCache):
     provider_name = "anidb"
@@ -108,7 +114,6 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
     characters = xml_parser.get_characters()
     episodes = xml_parser.get_episodes()
     main_staff = xml_parser.get_main_staff()
-    titles = xml_parser.get_titles()
 
     return dtos.TvSeriesData(
         raw={"api": raw_xml_doc, "web": web_html_page},
@@ -154,11 +159,7 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
         # STUDIOS
         studios=main_staff.get("Animation Work"),
         # TITLES
-        titles=dtos.ShowTitle(
-            en=titles["en"],
-            jp_jp=titles["jp_jp"],
-            jp_romanized=titles["jp_romanized"],
-        ),
+        titles=xml_parser.get_titles(),
     )
 
 
@@ -214,6 +215,7 @@ class AniDBXML:
             ep: RawEpisode = {
                 "id": item.attrib.get("id"),
                 "no": no,
+                "titles": self.get_titles(item),
             }
 
             airdate = getattr(item.find("./airdate"), "text", None)
@@ -227,14 +229,6 @@ class AniDBXML:
             rating = getattr(item.find("./rating"), "text", None)
             if rating:
                 ep["rating"] = rating
-
-            titles = self.get_titles(item)
-            if "en" in titles:
-                ep["title_en"] = titles["en"]
-            if "jp_jp" in titles:
-                ep["title_jp_jp"] = titles["jp_jp"]
-            if "jp_romanized" in titles:
-                ep["title_jp_romanized"] = titles["jp_romanized"]
 
             if _type == 1:
                 result_regular.append(ep)
@@ -266,36 +260,24 @@ class AniDBXML:
     def get_rating(self) -> Optional[str]:
         return getattr(self.xml_root.find("./ratings/permanent"), "text", None)
 
-    def get_titles(self, elem: ET.Element = None) -> Dict[str, AnimeTitle]:
+    def get_titles(self, elem: ET.Element = None) -> Dict[enums.Language, AnimeTitle]:
         elem = elem or self.xml_root.find("./titles")
 
-        results: Dict[str, Dict[str, AnimeTitle]] = {
-            "en": {},
-            "x-jat": {},
-            "ja": {},
-        }
+        results: Dict[enums.Language, Dict[str, AnimeTitle]] = defaultdict(dict)
 
         for item in elem.findall("./title"):
             _lang = item.attrib[f"{AniDBXML.NS}lang"]
             _type = item.attrib.get("type", "main")
 
-            if _lang not in ("x-jat", "en", "ja"):
+            if _lang not in LANG.keys():
                 continue
             if _type not in ("main", "official"):
                 continue
 
-            results[_lang].setdefault(_type, item.text.rstrip("."))
+            results[LANG[_lang]].setdefault(_type, item.text.rstrip("."))
 
         return {
-            "en": utils.normalize_string(
-                results["en"].get("main", results["en"].get("official")),
-            ),
-            "jp_jp": utils.normalize_string(
-                results["ja"].get("main", results["ja"].get("official")),
-            ),
-            "jp_romanized": utils.normalize_string(
-                results["x-jat"].get("main", results["x-jat"].get("official")),
-            ),
+            lang: utils.normalize_string(titles.get("main", titles.get("official"))) for lang, titles in results.items()
         }
 
 
@@ -408,11 +390,7 @@ def raw_episodes_list_to_dtos(  # noqa: C901
                 plot=ep_data.get("plot"),
                 premiered=ep_data.get("premiered"),
                 rating=ep_data.get("rating"),
-                titles=dtos.ShowTitle(
-                    en=ep_data.get("title_en"),
-                    jp_jp=ep_data.get("title_jp_jp"),
-                    jp_romanized=ep_data.get("title_jp_romanized"),
-                ),
+                titles=ep_data["titles"],
                 type=_type,
             )
         )

@@ -1,10 +1,10 @@
 from decimal import Decimal
-from typing import Any, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 import attr
 
 from anime_metadata import enums
-from anime_metadata.typeshed import AnimeId
+from anime_metadata.typeshed import AnimeId, AnimeTitle
 
 from . import _utils, show
 
@@ -27,7 +27,7 @@ class ProviderData:
     source_material: Optional[enums.SourceMaterial] = None
     staff: Optional[show.ShowStaff] = None
     studios: Optional[Sequence[str]] = attr.ib(default=None, converter=_utils.studios_converter)
-    titles: show.ShowTitle
+    titles: Dict[enums.Language, AnimeTitle]
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)

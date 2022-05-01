@@ -1,5 +1,7 @@
 import enum
 
+from .language import *  # noqa
+
 
 class CharacterType(enum.Enum):
     MAIN = enum.auto()

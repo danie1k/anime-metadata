@@ -2,6 +2,7 @@ import collections
 import json
 from typing import Dict, List, Optional, Sequence, Set, cast
 
+import babelfish
 from furl import furl
 from lxml.html import HtmlElement
 from typing_extensions import OrderedDict
@@ -217,7 +218,7 @@ def _raw_data_to_dto(
 
     characters = []
     for name, data in list(main_characters.items()) + list(supporting_characters.items()):
-        for seiyuu in data["seiyuu"].get("Japanese", []):
+        for seiyuu in data["seiyuu"].get(enums.Language.JAPANESE, []):
             characters.append(dtos.ShowCharacter(name=name, seiyuu=seiyuu))
 
     return dtos.TvSeriesData(
@@ -256,11 +257,7 @@ def _raw_data_to_dto(
         # STUDIOS
         studios=api_data_parser.get_studios(),
         # TITLES
-        titles=dtos.ShowTitle(
-            en=api_data_parser.get_title_en(),
-            jp_jp=api_data_parser.get_title_jp_jp(),
-            jp_romanized=api_data_parser.get_title_jp_romanized(),
-        ),
+        titles=api_data_parser.get_titles(),
     )
 
 
@@ -315,20 +312,19 @@ class MALApi:
     def get_studios(self) -> Set[str]:
         return set(str(item["name"]) for item in self.mal_api_data.get("studios", []))
 
-    def get_title_en(self) -> AnimeTitle:
-        alternative_titles = self.mal_api_data["alternative_titles"]
-        if "en" in alternative_titles and isinstance(alternative_titles["en"], str):
-            return alternative_titles["en"].strip()
-        raise NotImplementedError
+    def get_titles(self) -> Dict[enums.Language, AnimeTitle]:
+        result = {
+            enums.Language.ROMAJI: self.mal_api_data["title"].strip(),
+        }
 
-    def get_title_jp_jp(self) -> AnimeTitle:
-        alternative_titles = self.mal_api_data["alternative_titles"]
-        if "en" in alternative_titles and isinstance(alternative_titles["ja"], str):
-            return alternative_titles["ja"].strip()
-        raise NotImplementedError
+        en = self.mal_api_data["alternative_titles"].get(enums.Language.ENGLISH.value.alpha2)
+        if en:
+            result[enums.Language.ENGLISH] = en  # type:ignore
+        jp = self.mal_api_data["alternative_titles"].get(enums.Language.JAPANESE.value.alpha2)
+        if jp:
+            result[enums.Language.JAPANESE] = jp  # type:ignore
 
-    def get_title_jp_romanized(self) -> AnimeTitle:
-        return self.mal_api_data["title"].strip()
+        return result
 
 
 class MALWeb:
@@ -408,18 +404,22 @@ class MALWeb:
         _seiyuus: List[HtmlElement] = _content.xpath("//table//a[contains(@href, 'myanimelist.net/people/')]")
 
         result: RawCharacter = {
-            "name_en": _name_en.text.split("(")[0].strip(),
+            "name": {
+                enums.Language.ENGLISH: _name_en.text.split("(")[0].strip(),
+            },
             "seiyuu": collections.defaultdict(set),
         }
 
         if getattr(_name_jp_jp, "text", ""):
-            result["name_jp_jp"] = _name_jp_jp.text.strip(" ()")
+            result["name"][enums.Language.JAPANESE] = _name_jp_jp.text.strip(" ()")
 
         for seiyuu in _seiyuus:
             if not seiyuu.text_content().strip():
                 continue
             seiyuu_name: str = seiyuu.text.strip()
-            seiyuu_lang: str = seiyuu.xpath("./ancestor::td[position()=1]/div/small")[0].text.strip()
+            seiyuu_lang = babelfish.Language.fromname(
+                seiyuu.xpath("./ancestor::td[position()=1]/div/small")[0].text.strip()
+            )
             result["seiyuu"][seiyuu_lang].add(utils.reverse_name_order(seiyuu_name))
 
         return result
@@ -435,7 +435,7 @@ class MALWeb:
             )
         }
 
-    def extract_episodes_from_html(self) -> Sequence[RawEpisode]:
+    def extract_episodes_from_html(self) -> Sequence[RawEpisode]:  # noqa: C901
         if not self.anime_episodes_page:
             raise ValueError
         the_page = utils.load_html(self.anime_episodes_page)
@@ -446,11 +446,17 @@ class MALWeb:
         for episode in _table.xpath("./tr[contains(@class, 'episode-list-data')]"):  # type: HtmlElement
             ep: RawEpisode = {
                 "no": int(episode.xpath("./td[contains(@class, 'episode-number')]")[0].text.strip()),
-                "title_en": episode.xpath("./td[contains(@class, 'episode-title')]/a")[0].text.strip(),
+                "titles": {
+                    enums.Language.ENGLISH: episode.xpath("./td[contains(@class, 'episode-title')]/a")[0].text.strip(),
+                },
                 "premiered": episode.xpath("./td[contains(@class, 'episode-aired')]")[0].text.strip(),
             }
             try:
-                ep["title_jp"] = episode.xpath("./td[contains(@class, 'episode-title')]/span")[0].text.strip()
+                jp_titles = episode.xpath("./td[contains(@class, 'episode-title')]/span")[0].text.strip().split("(")
+                if jp_titles:
+                    ep["titles"][enums.Language.ROMAJI] = jp_titles[0].replace("\xa0", "").strip(" ()")
+                if len(jp_titles) == 2:
+                    ep["titles"][enums.Language.JAPANESE] = jp_titles[0].replace("\xa0", "").strip(" ()")
             except AttributeError:
                 pass
             result.append(ep)
@@ -475,11 +481,6 @@ def raw_episodes_list_to_dtos(  # noqa: C901
         if i not in _episodes:
             continue
 
-        try:
-            jp_titles = _episodes[i]["title_jp"].split("(")
-        except KeyError:
-            jp_titles = []
-
         result.append(
             dtos.ShowEpisode(
                 no=i,
@@ -487,11 +488,7 @@ def raw_episodes_list_to_dtos(  # noqa: C901
                 plot=_episodes[i].get("plot", ""),
                 premiered=_episodes[i]["premiered"],
                 rating=None,
-                titles=dtos.ShowTitle(
-                    en=_episodes[i]["title_en"],
-                    jp_romanized=jp_titles[0].strip(" ()\xa0") if jp_titles else None,
-                    jp_jp=jp_titles[1].strip(" ()\xa0") if len(jp_titles) == 2 else None,
-                ),
+                titles=_episodes[i]["titles"],
             )
         )
 

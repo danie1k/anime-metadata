@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import Any, List, Union  # noqa: F401
+from typing import Any, Dict, List, Union  # noqa: F401
 
 import attr
 
@@ -15,7 +15,6 @@ __all__ = [
     "ShowEpisode",
     "ShowImage",
     "ShowStaff",
-    "ShowTitle",
 ]
 
 
@@ -65,19 +64,6 @@ class ShowImage:
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class ShowTitle:
-    en: AnimeTitle
-    jp_jp: Union[AnimeTitle, None] = None
-    jp_romanized: Union[AnimeTitle, None] = None
-
-    @property
-    def jp(self) -> Union[AnimeTitle, None]:
-        if self.jp_romanized:
-            return self.jp_romanized
-        return self.jp_jp
-
-
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ShowEpisode:
     no: int
     type: enums.EpisodeType = enums.EpisodeType.REGULAR
@@ -88,4 +74,4 @@ class ShowEpisode:
     rating: Union[Decimal, None] = attr.ib(
         converter=attr.converters.optional(lambda value: Decimal(str(value)))  # type:ignore
     )
-    titles: ShowTitle
+    titles: Dict[enums.Language, AnimeTitle]

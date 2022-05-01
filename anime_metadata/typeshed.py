@@ -1,6 +1,9 @@
 from typing import Any, Dict, NamedTuple, Set, Union
 
+import babelfish
 from typing_extensions import OrderedDict, TypedDict
+
+from anime_metadata import enums
 
 AnimeId = Union[int, str]
 AnimeTitle = str
@@ -28,14 +31,10 @@ RawHtml = bytes
 Iso8601DateStr = str
 Iso8601DateTimeStr = str
 
-Language = str
 
-
-class RawCharacter(TypedDict, total=False):
-    name_en: CharacterName
-    name_jp_jp: CharacterName
-    name_jp_romanized: CharacterName
-    seiyuu: Dict[Language, Set[PersonName]]
+class RawCharacter(TypedDict):
+    name: Dict[enums.Language, CharacterName]
+    seiyuu: Dict[babelfish.Language, Set[PersonName]]
 
 
 class RawEpisode(TypedDict, total=False):
@@ -44,7 +43,4 @@ class RawEpisode(TypedDict, total=False):
     plot: str
     premiered: str
     rating: str
-    title_en: EpisodeTitle
-    title_jp: EpisodeTitle
-    title_jp_jp: EpisodeTitle
-    title_jp_romanized: EpisodeTitle
+    titles: Dict[enums.Language, AnimeTitle]

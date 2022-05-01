@@ -29,14 +29,13 @@ class BaseProvider:
 
     def search_series(
         self,
-        en_title: Optional[AnimeTitle] = None,
-        jp_title: Optional[AnimeTitle] = None,
+        *titles: Optional[AnimeTitle],
         year: Optional[int] = None,
     ) -> dtos.TvSeriesData:
-        if en_title is None and jp_title is None:
+        if not titles:
             raise ValidationError('At least one "title" argument is required!')
 
-        for title in (en_title, jp_title):
+        for title in titles:
             if title is None:
                 continue
             try:
@@ -44,9 +43,7 @@ class BaseProvider:
             except ProviderNoResultError:
                 continue
 
-        raise ProviderNoResultError(
-            f"Cannot find {self.__class__.__name__} for en_title={en_title} / jp_title={jp_title}"
-        )
+        raise ProviderNoResultError(f"Cannot find {self.__class__.__name__} for titles={repr(titles)}")
 
     def get_request(self, url: furl, *args: Any, **kwargs: Any) -> bytes:
         response = requests.get(url.tostr(), *args, **kwargs)

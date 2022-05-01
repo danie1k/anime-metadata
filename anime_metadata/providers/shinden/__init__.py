@@ -128,12 +128,12 @@ class ShindenWeb:
             source_material=tags["source_material"],
             # TODO: staff=(),
             # TODO: studios=(),
-            titles=dtos.ShowTitle(
-                en=self._extract_show_title(the_page),
-            ),
+            titles={
+                enums.Language.ENGLISH: self._extract_show_title(the_page),
+            },
         )
 
-    def _extract_show_title(self, the_page: HtmlElement) -> str:
+    def _extract_show_title(self, the_page: HtmlElement) -> AnimeTitle:
         return the_page.xpath("//h1[contains(@class, 'page-title')]//*[normalize-space(@class)='title']")[
             0
         ].text.strip()

@@ -3,7 +3,7 @@ from typing import Any, List, Optional, Sequence, Union, cast
 
 from furl import furl
 
-from anime_metadata import constants, dtos, interfaces, utils
+from anime_metadata import constants, dtos, enums, interfaces, utils
 from anime_metadata.exceptions import CacheDataNotFound, ProviderResultFound
 from anime_metadata.typeshed import AnimeId, AnimeTitle
 
@@ -19,8 +19,9 @@ class Cache(interfaces.BaseCache):
 
 
 class FanartProvider(interfaces.BaseProvider):
-    def __init__(self, preferred_lang: Sequence[str] = None, *args: Any, **kwargs: Any) -> None:
-        self.preferred_lang = preferred_lang or ["en", "jp", ""]
+    def __init__(self, preferred_lang: Sequence[enums.Language] = None, *args: Any, **kwargs: Any) -> None:
+        preferred_lang = preferred_lang or [enums.Language.ENGLISH, enums.Language.JAPANESE, enums.Language.UNKNOWN]
+        self.preferred_lang = [item.value for item in preferred_lang]
         super().__init__(*args, **kwargs)
 
     def _find_series_by_title(self, title: AnimeTitle, year: Optional[int]) -> dtos.TvSeriesData:
@@ -79,9 +80,7 @@ class FanartProvider(interfaces.BaseProvider):
                 landscape=self._get_best_image(json_data["tvthumb"]),
                 logo=self._get_best_image(json_data["hdtvlogo"]),
             ),
-            titles=dtos.ShowTitle(
-                en=json_data["name"],
-            ),
+            titles={enums.Language.ENGLISH: json_data["name"]},
         )
 
     # ------------------------------------------------------------------------------------------------------------------
