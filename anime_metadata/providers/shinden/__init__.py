@@ -142,10 +142,7 @@ class ShindenWeb:
 
     def _extract_show_plot(self, the_page: HtmlElement) -> str:
         raw_description: HtmlElement = the_page.xpath("//*[normalize-space(@id)='description']")[0]
-        soup = BeautifulSoup(html.tostring(raw_description), features="lxml")
-        for br in soup.find_all("br"):
-            br.replace_with("\n")
-        return soup.get_text(" ")
+        return html.tostring(raw_description)
 
     def _extract_show_rating(self, the_page: HtmlElement) -> Optional[str]:
         data: List[HtmlElement] = the_page.xpath("//*[normalize-space(@class)='info-aside-rating-user']")

@@ -50,6 +50,13 @@ def capitalize(value: str) -> str:
     return " ".join(map(str.capitalize, value.strip().split()))
 
 
+def html_br_to_nl(value: str) -> str:
+    soup = BeautifulSoup(value, features="lxml")
+    for br in soup.find_all("br"):
+        br.replace_with("\n")
+    return soup.get_text(" ")
+
+
 def collect_staff(main_staff: StaffList, *needles: str) -> List[str]:
     result = set()
 
@@ -84,7 +91,7 @@ def load_html(raw_data: bytes) -> html.HtmlElement:
 
 
 def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
-    value = getattr(getattr, "text", value)
+    value = getattr(value, "text", value)
     value = None if value is None else value.strip()
     if not value:
         return None
@@ -107,11 +114,17 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
     # TODO: Remove:
     #  - Text containing: "(Source ...)"
 
-    def _line_filter(value: str) -> bool:
-        value = value.strip()
-        if value.lower().startswith("source:") or value.lower().startswith("note:"):
+    def _line_filter(text_line: str) -> bool:
+        text_line = text_line.strip()
+        if any(
+            (
+                text_line.lower().startswith("source:"),
+                text_line.lower().startswith("note:"),
+                text_line.startswith("* "),
+            )
+        ):
             return False
-        return bool(value)
+        return bool(text_line)
 
     # fmt: off
     result = "\n".join(
@@ -121,4 +134,4 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
         )
     )
     # fmt: on
-    return result
+    return html_br_to_nl(result)
