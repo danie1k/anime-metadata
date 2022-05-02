@@ -7,3 +7,6 @@ isort
 mypy
 types-python-dateutil
 types-requests
+
+pytest
+pytest-dotenv
