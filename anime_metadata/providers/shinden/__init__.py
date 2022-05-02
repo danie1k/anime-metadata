@@ -45,10 +45,7 @@ class ShindenProvider(interfaces.BaseProvider):
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(
-                        BASE_WEB_URL,
-                        path=["series", anime_id],
-                    ),
+                    furl(BASE_WEB_URL).add(path=["series", anime_id]),
                     headers={
                         "User-Agent": constants.USER_AGENT,
                         "Referer": BASE_WEB_URL,
@@ -63,13 +60,14 @@ class ShindenProvider(interfaces.BaseProvider):
     def _search_shinden_with_pagination(self, title: AnimeTitle, year: int = None) -> Iterator[SearchResult]:
         url = furl(
             BASE_WEB_URL,
-            path=["series"],
             args={
                 "search": title,
                 "type": "contains",
                 "sort_by": "score",
                 "sort_order": "asc",
             },
+        ).add(
+            path=["series"],
         )
 
         if year:
@@ -126,7 +124,7 @@ class ShindenWeb:
             id=self.anime_id,
             # IMAGES
             images=dtos.ShowImage(
-                base_url="https://shinden.pl",
+                base_url=BASE_WEB_URL,
                 folder=the_page.xpath("//*[normalize-space(@class)='title-cover']/a[contains(@href, '/images/')]")[
                     0
                 ].attrib["href"],
@@ -140,9 +138,10 @@ class ShindenWeb:
             # SOURCE_MATERIAL
             source_material=tags["source_material"],
             # TODO: staff=(),
-            # TODO: studios=(),
+            # STUDIOS
+            studios=basic_information["studios"],
             titles={
-                enums.Language.ENGLISH: self._extract_show_title(the_page),
+                enums.Language.ROMAJI: self._extract_show_title(the_page),
             },
         )
 
@@ -153,7 +152,7 @@ class ShindenWeb:
 
     def _extract_show_plot(self, the_page: HtmlElement) -> str:
         raw_description: HtmlElement = the_page.xpath("//*[normalize-space(@id)='description']")[0]
-        return html.tostring(raw_description)
+        return html.tostring(raw_description, encoding="utf-8").decode()
 
     def _extract_show_rating(self, the_page: HtmlElement) -> Optional[str]:
         data: List[HtmlElement] = the_page.xpath("//*[normalize-space(@class)='info-aside-rating-user']")
@@ -172,7 +171,7 @@ class ShindenWeb:
 
         for a_ in tags_etc:
             href = a_.attrib["href"]
-            text = a_.text.strip()
+            text = a_.text.replace("(do Rozdzielenia)", "").replace("(do rozdzielenia)", "").strip()
 
             if "/source/" in href:
                 text = text.lower()
@@ -203,6 +202,7 @@ class ShindenWeb:
         date_premiered = None
         date_ended = None
         mpaa = None
+        studios = None
 
         for dt in basic_information:
             dd: HtmlElement = dt.xpath("./following-sibling::dd[1]")[0]
@@ -217,9 +217,13 @@ class ShindenWeb:
             elif "MPAA" in title:
                 mpaa = enums.MPAA(descr)
 
+            elif "Studio" in title:
+                studios = set(item.text.strip() for item in dd.findall("a"))
+
         return {
             "dates": dtos.ShowDate(premiered=date_premiered, ended=date_ended),
             "mpaa": mpaa,
+            "studios": studios,
         }
 
     def extract_search_results(self) -> Dict[str, Union[None, str, List[SearchResult]]]:  # noqa: C901
@@ -257,18 +261,14 @@ class ShindenWeb:
         _next_page = None
         try:
             _prev_page = furl(
-                BASE_WEB_URL,
-                path=the_page.xpath("//*[normalize-space(@class)='pagination-prev']//a")[0].attrib["href"],
-            )
-            _prev_page.remove(args=["r307"])
+                BASE_WEB_URL + the_page.xpath("//*[normalize-space(@class)='pagination-prev']//a")[0].attrib["href"]
+            ).remove(args=["r307"])
         except IndexError:
             pass
         try:
             _next_page = furl(
-                BASE_WEB_URL,
-                path=the_page.xpath("//*[normalize-space(@class)='pagination-next']//a")[0].attrib["href"],
-            )
-            _next_page.remove(args=["r307"])
+                BASE_WEB_URL + the_page.xpath("//*[normalize-space(@class)='pagination-next']//a")[0].attrib["href"]
+            ).remove(args=["r307"])
         except IndexError:
             pass
 

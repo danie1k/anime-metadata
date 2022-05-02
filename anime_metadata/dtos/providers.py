@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence, Set
 
 import attr
 
@@ -17,17 +17,18 @@ __all__ = [
 class ProviderData:
     _provider: object
     _raw: Optional[Dict[str, Any]] = None
-    characters: Optional[Sequence[show.ShowCharacter]] = None
     dates: Optional[show.ShowDate] = None
-    genres: Optional[Sequence[str]] = attr.ib(default=None, converter=_utils.genres_converter)
+    genres: Optional[Set[str]] = attr.ib(default=None, converter=_utils.genres_converter)
     id: AnimeId
-    images: show.ShowImage
+    images: Optional[show.ShowImage] = None
+    main_characters: Optional[Set[show.ShowCharacter]] = None
     mpaa: Optional[enums.MPAA] = None
     plot: Optional[str] = None
     rating: Optional[Decimal] = attr.ib(default=None, converter=_utils.rating_converter)
+    secondary_characters: Optional[Set[show.ShowCharacter]] = None
     source_material: Optional[enums.SourceMaterial] = None
     staff: Optional[show.ShowStaff] = None
-    studios: Optional[Sequence[str]] = attr.ib(default=None, converter=_utils.unique_list_converter)
+    studios: Optional[Set[str]] = attr.ib(default=None, converter=attr.converters.optional(set))
     titles: Dict[enums.Language, AnimeTitle]
 
 

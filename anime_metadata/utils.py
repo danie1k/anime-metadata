@@ -110,6 +110,7 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
 
     result = re.sub(r" {2,}", " ", result)
     result = ANIDB_LINK_REMOVER.sub("\\2", result)
+    result = html_br_to_nl(result)
 
     # TODO: Remove:
     #  - Text containing: "(Source ...)"
@@ -134,4 +135,4 @@ def normalize_string(value: Union[str, ET.Element, None]) -> Union[str, None]:
         )
     )
     # fmt: on
-    return html_br_to_nl(result)
+    return result

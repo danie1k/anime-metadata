@@ -1,12 +1,10 @@
 import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, List, Sequence, Union
+from typing import TYPE_CHECKING, Any, List, Set, Union
 
 import attr
 from dateutil.parser import ParserError, parse as dateutil_parse
 from furl import furl
-
-from anime_metadata import utils
 
 if TYPE_CHECKING:
     from anime_metadata.dtos.show import ShowDate
@@ -33,15 +31,8 @@ def date_converter(value: Any) -> Union[datetime.date, None]:  # noqa: C901
         return None
 
 
-def genres_converter(value: Any) -> Sequence[str]:
-    if not value:
-        return []
-    return sorted(
-        map(
-            utils.capitalize,
-            unique_list_converter(["Anime", *(item for item in set(value))]),
-        )
-    )
+def genres_converter(value: Any) -> Set[str]:
+    return set(["Anime", *value]) if value else set()
 
 
 def rating_converter(value: Any) -> Union[Decimal, None]:
@@ -69,7 +60,5 @@ def image_url_factory(base_url: str, image_url: Union[str, None]) -> Union[str, 
         return None
 
     if base_url:
-        url = furl(base_url)
-        url.path.add(value)
-        return url.tostr()
+        return furl(base_url).add(path=value).tostr()
     return value

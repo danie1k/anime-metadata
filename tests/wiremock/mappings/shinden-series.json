@@ -1,0 +1,10 @@
+{
+    "request": {
+        "urlPathPattern": "/shinden/series/[0-9]+",
+        "method": "GET"
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "shinden/series-{{request.pathSegments.[2]}}.html"
+    }
+}
