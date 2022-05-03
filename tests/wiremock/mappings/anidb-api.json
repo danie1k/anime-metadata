@@ -1,0 +1,17 @@
+{
+    "request": {
+        "urlPath": "/anidb/httpapi",
+        "method": "GET",
+        "queryParameters": {
+            "aid": {"matches": "^[0-9]+$"},
+            "client": {"equalTo": "client"},
+            "clientver": {"equalTo": "clientver"},
+            "protover": {"equalTo": "1"},
+            "request": {"equalTo": "anime"}
+        }
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "anidb/{{request.pathSegments.[1]}}-{{request.query.aid}}.xml"
+    }
+}

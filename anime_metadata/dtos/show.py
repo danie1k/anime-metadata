@@ -1,11 +1,11 @@
 import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Union  # noqa: F401
+from typing import Any, Dict, List, Optional, Set, Union  # noqa: F401
 
 import attr
 
 from anime_metadata import enums
-from anime_metadata.typeshed import URL, AnimeTitle, EpisodeId, Rating
+from anime_metadata.typeshed import URL, AnimeTitle, EpisodeId, PersonName, Rating
 
 from . import _utils
 
@@ -26,10 +26,10 @@ class ShowCharacter:
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ShowStaff:
-    director: List[str] = []
-    guest_star: List[str] = []
-    music: List[str] = []
-    screenwriter: List[str] = []
+    director: Optional[Set[PersonName]] = attr.ib(default=None, converter=attr.converters.optional(set))
+    guest_star: Optional[Set[PersonName]] = attr.ib(default=None, converter=attr.converters.optional(set))
+    music: Optional[Set[PersonName]] = attr.ib(default=None, converter=attr.converters.optional(set))
+    screenwriter: Optional[Set[PersonName]] = attr.ib(default=None, converter=attr.converters.optional(set))
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)

@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+import string
 from typing import TYPE_CHECKING, Any, List, Set, Union
 
 import attr
@@ -32,7 +33,12 @@ def date_converter(value: Any) -> Union[datetime.date, None]:  # noqa: C901
 
 
 def genres_converter(value: Any) -> Set[str]:
-    return set(["Anime", *value]) if value else set()
+    if not value:
+        return set()
+
+    result = map(lambda item: string.capwords(item, " "), value)
+    result = map(lambda item: string.capwords(item, "-"), result)
+    return {"Anime", *result}
 
 
 def rating_converter(value: Any) -> Union[Decimal, None]:

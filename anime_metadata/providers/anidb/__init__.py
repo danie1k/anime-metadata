@@ -28,6 +28,7 @@ __all__ = [
 
 BASE_API_URL = "http://api.anidb.net:9001"
 BASE_WEB_URL = "https://anidb.net"
+BASE_IMG_CDN_URL = "https://cdn-eu.anidb.net/images/main"
 
 LANG = {
     "en": enums.Language.ENGLISH,
@@ -80,7 +81,6 @@ class AniDBProvider(interfaces.BaseProvider):
                 raw_xml_doc = self.get_request(
                     furl(
                         BASE_API_URL,
-                        path=["httpapi"],
                         args={
                             "aid": anime_id,
                             "client": self.api_key.split("|")[0],
@@ -88,7 +88,7 @@ class AniDBProvider(interfaces.BaseProvider):
                             "protover": 1,
                             "request": "anime",
                         },
-                    ),
+                    ).add(path=["httpapi"])
                 )
                 if raw_xml_doc.startswith(b"<error"):
                     raise requests.HTTPError(raw_xml_doc.decode("utf-8"))
@@ -101,10 +101,7 @@ class AniDBProvider(interfaces.BaseProvider):
                 raw_html_page = cache.get()
             except CacheDataNotFound:
                 raw_html_page = self.get_request(
-                    furl(
-                        BASE_WEB_URL,
-                        path=["anime", anime_id],
-                    ),
+                    furl(BASE_WEB_URL).add(path=["anime", anime_id]),
                     headers={
                         "User-Agent": constants.USER_AGENT,
                         "Referer": BASE_WEB_URL,
@@ -129,16 +126,16 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
         # ID
         id=xml_parser.get_id(),
         # CHARACTERS
-        characters=[
-            *[
-                dtos.ShowCharacter(name=name, seiyuu=seiyuu)
-                for name, seiyuu in characters[enums.CharacterType.MAIN].items()
-            ],
-            *[
-                dtos.ShowCharacter(name=name, seiyuu=seiyuu)
-                for name, seiyuu in characters[enums.CharacterType.SUPPORTING].items()
-            ],
-        ],
+        main_characters={
+            dtos.ShowCharacter(name=name, seiyuu=seiyuu)  # type:ignore
+            for name, seiyuu in characters[enums.CharacterType.MAIN].items()
+        }
+        or None,
+        secondary_characters={
+            dtos.ShowCharacter(name=name, seiyuu=seiyuu)  # type:ignore
+            for name, seiyuu in characters[enums.CharacterType.SUPPORTING].items()
+        }
+        or None,
         # DATES
         dates=dtos.ShowDate(
             premiered=xml_parser.get_date("startdate"),
@@ -150,7 +147,7 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
         genres=web_parser.extract_tags_from_html(),
         # IMAGES
         images=dtos.ShowImage(
-            base_url="https://cdn-eu.anidb.net/images/main/",
+            base_url=BASE_IMG_CDN_URL,
             folder=xml_parser.get_picture(),
         ),
         # PLOT
@@ -166,7 +163,7 @@ def _raw_data_to_dto(raw_xml_doc: RawHtml, web_html_page: RawHtml) -> dtos.TvSer
             screenwriter=utils.collect_staff(main_staff, "composition"),
         ),
         # STUDIOS
-        studios=main_staff.get("Animation Work"),
+        studios=map(utils.reverse_name_order, main_staff.get("Animation Work")),  # type:ignore
         # TITLES
         titles=xml_parser.get_titles(),
     )

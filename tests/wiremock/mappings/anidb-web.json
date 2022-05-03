@@ -1,0 +1,10 @@
+{
+    "request": {
+        "urlPathPattern": "/anidb/web/anime/[0-9]+",
+        "method": "GET"
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "anidb/{{request.pathSegments.[1]}}-{{request.pathSegments.[3]}}.html"
+    }
+}
